@@ -138,6 +138,8 @@
 				A10000010000000000000004 /* RootView.swift in Sources */,
 				A10000010000000000000005 /* EntryEditorView.swift in Sources */,
 				A10000010000000000000006 /* ReminderSettingsView.swift in Sources */,
+				A10000010000000000000007 /* DeepLinkManager.swift in Sources */,
+				A10000010000000000000008 /* ExportModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -239,6 +241,15 @@
 			buildConfigurations = (
 				A10000910000000000000003 /* Debug */,
 				A10000910000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A10000810000000000000001 /* Project object */;
+}
+0004 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

@@ -23,7 +23,7 @@ A lean, modern iPhone app concept for daily health journaling with a quick end-o
 This repository was generated in a non-macOS environment, so the project cannot be built or validated here with Xcode yet.
 However, the code and Xcode project structure are prepared for opening on a Mac with Xcode.
 
-## Features in v3
+## Features in v4
 
 - Visual home screen with hero card and recent-day cards
 - Dedicated day detail screen instead of only list-to-form flow
@@ -40,7 +40,9 @@ However, the code and Xcode project structure are prepared for opening on a Mac 
 - Symptom presets for quicker input
 - Cleaner card-based editor UI
 - Reminder scheduling UI with a more polished layout
-- Export-friendly structure for later analytics
+- Deeplink support from notifications straight into today's check-in
+- JSON export preview for later analysis workflows
+- Small overview metrics on the home screen
 
 ## Development note
 
@@ -52,11 +54,12 @@ The data model changed between iterations. If you see a SwiftData container load
 2. Select an iPhone simulator (e.g. iPhone 13)
 3. Build and run
 4. Allow notifications when prompted
+5. Tap a reminder notification to jump directly into today's check-in
 
 ## Recommended next steps
 
-- Validate spacing and interaction details on a real device
-- Add JSON / CSV export
+- Validate deeplink behavior on a real device and simulator
+- Add share sheet / file export for JSON and CSV
 - Add weekly trends and simple correlations
 - Add app icon and brand polish
 - Consider optional Apple Health integration later

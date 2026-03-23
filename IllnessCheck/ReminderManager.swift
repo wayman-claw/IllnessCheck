@@ -2,9 +2,14 @@ import Foundation
 import UserNotifications
 
 @MainActor
-final class ReminderManager: ObservableObject {
+final class ReminderManager: NSObject, ObservableObject {
     @Published var reminderEnabled: Bool = false
     @Published var reminderTime: Date = Date()
+
+    override init() {
+        super.init()
+        UNUserNotificationCenter.current().delegate = self
+    }
 
     func requestAuthorization() async {
         do {
@@ -23,8 +28,9 @@ final class ReminderManager: ObservableObject {
 
         let content = UNMutableNotificationContent()
         content.title = "Daily Check-In"
-        content.body = "Take a minute to log food, drinks, symptoms and notes for today."
+        content.body = "Direkt den heutigen Eintrag öffnen und den Tag kurz festhalten."
         content.sound = .default
+        content.userInfo = ["deeplink": "illnesscheck://checkin/today"]
 
         let components = Calendar.current.dateComponents([.hour, .minute], from: reminderTime)
         let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: true)
@@ -36,4 +42,23 @@ final class ReminderManager: ObservableObject {
             print("Scheduling reminder failed: \(error)")
         }
     }
+}
+
+extension ReminderManager: UNUserNotificationCenterDelegate {
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async -> UNNotificationPresentationOptions {
+        [.banner, .sound]
+    }
+
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+        guard let deepLink = response.notification.request.content.userInfo["deeplink"] as? String,
+              let url = URL(string: deepLink) else { return }
+
+        await MainActor.run {
+            NotificationCenter.default.post(name: .illnessCheckDeepLinkOpened, object: url)
+        }
+    }
+}
+
+extension Notification.Name {
+    static let illnessCheckDeepLinkOpened = Notification.Name("illnessCheckDeepLinkOpened")
 }

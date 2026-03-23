@@ -4,7 +4,10 @@ import SwiftData
 struct RootView: View {
     @Query(sort: [SortDescriptor(\DailyEntry.date, order: .reverse)]) private var entries: [DailyEntry]
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var deepLinkManager: DeepLinkManager
     @State private var showingNewEntry = false
+    @State private var exportJSON: String = ""
+    @State private var showingExport = false
 
     private var latestEntry: DailyEntry? { entries.first }
 
@@ -13,8 +16,10 @@ struct RootView: View {
             ScrollView {
                 VStack(spacing: 20) {
                     HeroCardView(latestEntry: latestEntry) {
-                        showingNewEntry = true
+                        openTodayCheckIn()
                     }
+
+                    analyticsOverview
 
                     if entries.isEmpty {
                         ContentUnavailableView(
@@ -26,9 +31,17 @@ struct RootView: View {
                         .padding(.top, 40)
                     } else {
                         VStack(alignment: .leading, spacing: 14) {
-                            Text("Letzte Tage")
-                                .font(.title3.weight(.semibold))
-                                .frame(maxWidth: .infinity, alignment: .leading)
+                            HStack {
+                                Text("Letzte Tage")
+                                    .font(.title3.weight(.semibold))
+                                Spacer()
+                                Button("Export") {
+                                    exportJSON = ExportFactory.makeJSON(from: entries)
+                                    showingExport = true
+                                }
+                                .buttonStyle(.bordered)
+                            }
+                            .frame(maxWidth: .infinity, alignment: .leading)
 
                             ForEach(entries) { entry in
                                 NavigationLink {
@@ -63,20 +76,51 @@ struct RootView: View {
 
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
-                        showingNewEntry = true
+                        openTodayCheckIn()
                     } label: {
                         Image(systemName: "plus")
                     }
                 }
             }
             .sheet(isPresented: $showingNewEntry) {
-                EntryEditorView(entry: nil)
+                EntryEditorView(entry: todayEntry)
+            }
+            .sheet(isPresented: $showingExport) {
+                ExportPreviewView(json: exportJSON)
+            }
+            .onChange(of: deepLinkManager.pendingRoute) { _, route in
+                guard route == .todayCheckIn else { return }
+                openTodayCheckIn()
+                deepLinkManager.consume(route: .todayCheckIn)
             }
         }
     }
 
+    private var todayEntry: DailyEntry? {
+        let calendar = Calendar.current
+        return entries.first(where: { calendar.isDateInToday($0.date) })
+    }
+
+    private var analyticsOverview: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Überblick")
+                .font(.headline)
+
+            HStack(spacing: 10) {
+                MiniStat(title: "Einträge", value: "\(entries.count)")
+                MiniStat(title: "Kaffee-Tage", value: "\(entries.filter(\\.hadCoffee).count)")
+                MiniStat(title: "Beschwerden", value: "\(entries.reduce(0) { $0 + $1.symptoms.count })")
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private func delete(_ entry: DailyEntry) {
         modelContext.delete(entry)
+    }
+
+    private func openTodayCheckIn() {
+        showingNewEntry = true
     }
 }
 
@@ -311,6 +355,29 @@ private struct DetailRow: View {
                 .foregroundStyle(.secondary)
             Text(value)
                 .font(.body)
+        }
+    }
+}
+
+private struct ExportPreviewView: View {
+    let json: String
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(json)
+                    .font(.system(.footnote, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+            }
+            .navigationTitle("JSON Export")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Fertig") { dismiss() }
+                }
+            }
         }
     }
 }

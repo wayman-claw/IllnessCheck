@@ -4,6 +4,7 @@ import SwiftData
 @main
 struct IllnessCheckApp: App {
     @StateObject private var reminderManager = ReminderManager()
+    @StateObject private var deepLinkManager = DeepLinkManager()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -36,6 +37,14 @@ struct IllnessCheckApp: App {
         WindowGroup {
             RootView()
                 .environmentObject(reminderManager)
+                .environmentObject(deepLinkManager)
+                .onOpenURL { url in
+                    deepLinkManager.handle(url: url)
+                }
+                .onReceive(NotificationCenter.default.publisher(for: .illnessCheckDeepLinkOpened)) { notification in
+                    guard let url = notification.object as? URL else { return }
+                    deepLinkManager.handle(url: url)
+                }
         }
         .modelContainer(sharedModelContainer)
     }
