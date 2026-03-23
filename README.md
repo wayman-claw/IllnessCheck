@@ -24,6 +24,7 @@ DayTrace is designed as a personal health reflection app:
 
 ### Name
 - **Primary recommendation:** DayTrace
+- Home screen display name: **DayTrace**
 - Alternatives:
   - Evening Check
   - Daily Pulse
