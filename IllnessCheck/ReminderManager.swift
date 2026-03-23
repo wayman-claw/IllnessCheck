@@ -1,5 +1,6 @@
 import Foundation
 import UserNotifications
+import UIKit
 
 @MainActor
 final class ReminderManager: NSObject, ObservableObject {
@@ -67,8 +68,11 @@ extension ReminderManager: UNUserNotificationCenterDelegate {
         guard let deepLink = response.notification.request.content.userInfo["deeplink"] as? String,
               let url = URL(string: deepLink) else { return }
 
+        let absolute = url.absoluteString
+
         await MainActor.run {
-            self.handleNotificationDeepLink(url)
+            guard let reopenedURL = URL(string: absolute) else { return }
+            UIApplication.shared.open(reopenedURL)
         }
     }
 }
