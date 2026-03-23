@@ -11,12 +11,24 @@ struct IllnessCheckApp: App {
             SymptomEntry.self
         ])
 
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
+        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
         do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return try ModelContainer(for: schema, configurations: [configuration])
         } catch {
-            fatalError("Could not create ModelContainer: \(error)")
+            print("Primary SwiftData container creation failed: \(error)")
+
+            do {
+                try SwiftDataStoreResetter.resetDefaultStoreFiles()
+                return try ModelContainer(for: schema, configurations: [configuration])
+            } catch {
+                do {
+                    let inMemoryConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
+                    return try ModelContainer(for: schema, configurations: [inMemoryConfiguration])
+                } catch {
+                    fatalError("Could not create ModelContainer even after reset fallback: \(error)")
+                }
+            }
         }
     }()
 
@@ -26,5 +38,28 @@ struct IllnessCheckApp: App {
                 .environmentObject(reminderManager)
         }
         .modelContainer(sharedModelContainer)
+    }
+}
+
+enum SwiftDataStoreResetter {
+    static func resetDefaultStoreFiles() throws {
+        let fileManager = FileManager.default
+        let supportURL = try fileManager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+
+        let candidateNames = [
+            "default.store",
+            "default.store-shm",
+            "default.store-wal",
+            "IllnessCheck.store",
+            "IllnessCheck.store-shm",
+            "IllnessCheck.store-wal"
+        ]
+
+        for name in candidateNames {
+            let fileURL = supportURL.appendingPathComponent(name)
+            if fileManager.fileExists(atPath: fileURL.path) {
+                try? fileManager.removeItem(at: fileURL)
+            }
+        }
     }
 }

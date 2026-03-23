@@ -41,6 +41,10 @@ However, the code and Xcode project structure are prepared for opening on a Mac 
 - Reminder scheduling UI
 - Export-friendly structure for later analytics
 
+## Development note
+
+The data model changed between iterations. If you see a SwiftData container load error on a simulator/device with older local app data, the current app now attempts to reset the incompatible local store and recover automatically.
+
 ## Open in Xcode
 
 1. Open `IllnessCheck.xcodeproj`
