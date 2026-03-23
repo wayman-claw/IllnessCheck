@@ -75,5 +75,3 @@ enum SwiftDataStoreResetter {
     }
 }
 
-    }
-}
