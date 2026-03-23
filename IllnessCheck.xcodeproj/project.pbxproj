@@ -13,6 +13,8 @@
 		A10000010000000000000004 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000004 /* RootView.swift */; };
 		A10000010000000000000005 /* EntryEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000005 /* EntryEditorView.swift */; };
 		A10000010000000000000006 /* ReminderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000006 /* ReminderSettingsView.swift */; };
+		A10000010000000000000007 /* DeepLinkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000008 /* DeepLinkManager.swift */; };
+		A10000010000000000000008 /* ExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000009 /* ExportModels.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -22,6 +24,8 @@
 		A10000110000000000000004 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A10000110000000000000005 /* EntryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditorView.swift; sourceTree = "<group>"; };
 		A10000110000000000000006 /* ReminderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSettingsView.swift; sourceTree = "<group>"; };
+		A10000110000000000000008 /* DeepLinkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkManager.swift; sourceTree = "<group>"; };
+		A10000110000000000000009 /* ExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportModels.swift; sourceTree = "<group>"; };
 		A10000110000000000000007 /* IllnessCheck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = IllnessCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -55,6 +59,8 @@
 				A10000110000000000000004 /* RootView.swift */,
 				A10000110000000000000005 /* EntryEditorView.swift */,
 				A10000110000000000000006 /* ReminderSettingsView.swift */,
+				A10000110000000000000008 /* DeepLinkManager.swift */,
+				A10000110000000000000009 /* ExportModels.swift */,
 			);
 		};
 		A10000310000000000000003 /* Products */ = {
@@ -241,15 +247,6 @@
 			buildConfigurations = (
 				A10000910000000000000003 /* Debug */,
 				A10000910000000000000004 /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-/* End XCConfigurationList section */
-	};
-	rootObject = A10000810000000000000001 /* Project object */;
-}
-0004 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
