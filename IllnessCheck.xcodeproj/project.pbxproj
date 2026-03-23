@@ -16,6 +16,8 @@
 		A10000010000000000000007 /* DeepLinkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000008 /* DeepLinkManager.swift */; };
 		A10000010000000000000008 /* ExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000009 /* ExportModels.swift */; };
 		A10000010000000000000009 /* Insights.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000010 /* Insights.swift */; };
+		A10000010000000000000010 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000011 /* AppSettings.swift */; };
+		A10000010000000000000011 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000012 /* ProfileSettingsView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,6 +30,8 @@
 		A10000110000000000000008 /* DeepLinkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkManager.swift; sourceTree = "<group>"; };
 		A10000110000000000000009 /* ExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportModels.swift; sourceTree = "<group>"; };
 		A10000110000000000000010 /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
+		A10000110000000000000011 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
+		A10000110000000000000012 /* ProfileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsView.swift; sourceTree = "<group>"; };
 		A10000110000000000000007 /* IllnessCheck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = IllnessCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -64,6 +68,8 @@
 				A10000110000000000000008 /* DeepLinkManager.swift */,
 				A10000110000000000000009 /* ExportModels.swift */,
 				A10000110000000000000010 /* Insights.swift */,
+				A10000110000000000000011 /* AppSettings.swift */,
+				A10000110000000000000012 /* ProfileSettingsView.swift */,
 			);
 		};
 		A10000310000000000000003 /* Products */ = {
@@ -150,6 +156,8 @@
 				A10000010000000000000007 /* DeepLinkManager.swift in Sources */,
 				A10000010000000000000008 /* ExportModels.swift in Sources */,
 				A10000010000000000000009 /* Insights.swift in Sources */,
+				A10000010000000000000010 /* AppSettings.swift in Sources */,
+				A10000010000000000000011 /* ProfileSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -271,17 +279,6 @@
 				A10000910000000000000004 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-/* End XCConfigurationList section */
-	};
-	rootObject = A10000810000000000000001 /* Project object */;
-}
-ationList section */
-	};
-	rootObject = A10000810000000000000001 /* Project object */;
-}
-figurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
