@@ -358,8 +358,13 @@ private struct SymptomPresetScroller: View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(SymptomPreset.allCases) { preset in
-                    Button(preset.title) {
+                    Button {
                         onSelect(preset)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: preset.symbol)
+                            Text(preset.title)
+                        }
                     }
                     .buttonStyle(.bordered)
                 }

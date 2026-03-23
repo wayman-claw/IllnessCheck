@@ -285,10 +285,13 @@ private struct DayRowCard: View {
             }
 
             if !entry.symptoms.isEmpty {
-                Text(entry.symptoms.map { "\($0.name) (\($0.severity.title))" }.joined(separator: ", "))
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(2)
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(entry.symptoms) { symptom in
+                            SymptomBadge(symptom: symptom)
+                        }
+                    }
+                }
             }
         }
         .padding(18)
@@ -311,6 +314,29 @@ private struct SummaryBadge: View {
         .padding(.horizontal, 10)
         .padding(.vertical, 8)
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+    }
+}
+
+private struct SymptomBadge: View {
+    let symptom: SymptomEntry
+
+    var body: some View {
+        let preset = SymptomPreset.preset(for: symptom.name)
+
+        HStack(spacing: 6) {
+            if let preset {
+                Image(systemName: preset.symbol)
+            }
+            Text(symptom.name)
+        }
+        .font(.caption)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color(.systemBackground), in: Capsule())
+        .overlay(
+            Capsule()
+                .stroke(Color.orange.opacity(0.25), lineWidth: 1)
+        )
     }
 }
 
@@ -484,6 +510,18 @@ private struct ExportPreviewView: View {
                     .font(.system(.footnote, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
+            }
+            .navigationTitle("JSON Export")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Fertig") { dismiss() }
+                }
+            }
+        }
+    }
+}
+padding()
             }
             .navigationTitle("JSON Export")
             .navigationBarTitleDisplayMode(.inline)

@@ -179,6 +179,23 @@ enum SymptomPreset: String, CaseIterable, Identifiable {
         case .custom: return "Sonstiges"
         }
     }
+
+    var symbol: String {
+        switch self {
+        case .headache: return "brain.head.profile"
+        case .bellyAche: return "figure.seated.side"
+        case .nausea: return "waveform.path.ecg"
+        case .fatigue: return "moon.zzz.fill"
+        case .soreThroat: return "bandage.fill"
+        case .backPain: return "figure.walk"
+        case .custom: return "cross.case.fill"
+        }
+    }
+
+    static func preset(for symptomName: String) -> SymptomPreset? {
+        let normalized = symptomName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        return allCases.first { $0.title.lowercased() == normalized }
+    }
 }
 
 enum Achievement: String, CaseIterable, Identifiable {
