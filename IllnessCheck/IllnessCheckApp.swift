@@ -8,8 +8,7 @@ struct IllnessCheckApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
             DailyEntry.self,
-            SymptomEntry.self,
-            DrinkEntry.self
+            SymptomEntry.self
         ])
 
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)

@@ -11,20 +11,22 @@ struct RootView: View {
             Group {
                 if entries.isEmpty {
                     ContentUnavailableView(
-                        "No Entries Yet",
+                        "Noch keine Einträge",
                         systemImage: "heart.text.square",
-                        description: Text("Create your first daily check-in to start tracking patterns.")
+                        description: Text("Starte mit deinem ersten Tages-Check-in und beobachte Muster über die Zeit.")
                     )
                 } else {
                     List {
-                        ForEach(entries) { entry in
-                            NavigationLink {
-                                EntryEditorView(entry: entry)
-                            } label: {
-                                DayRowView(entry: entry)
+                        Section {
+                            ForEach(entries) { entry in
+                                NavigationLink {
+                                    EntryEditorView(entry: entry)
+                                } label: {
+                                    DayRowView(entry: entry)
+                                }
                             }
+                            .onDelete(perform: deleteEntries)
                         }
-                        .onDelete(perform: deleteEntries)
                     }
                     .listStyle(.insetGrouped)
                 }
@@ -35,7 +37,7 @@ struct RootView: View {
                     NavigationLink {
                         ReminderSettingsView()
                     } label: {
-                        Label("Reminders", systemImage: "bell.badge")
+                        Label("Reminder", systemImage: "bell.badge")
                     }
                 }
 
@@ -43,7 +45,7 @@ struct RootView: View {
                     Button {
                         showingNewEntry = true
                     } label: {
-                        Label("New Entry", systemImage: "plus")
+                        Label("Neuer Eintrag", systemImage: "plus")
                     }
                 }
             }
@@ -64,13 +66,23 @@ private struct DayRowView: View {
     let entry: DailyEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(entry.date, style: .date)
-                .font(.headline)
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text(entry.date, style: .date)
+                    .font(.headline)
+                Spacer()
+                Text(entry.foodCategory.title)
+                    .font(.caption)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.thinMaterial, in: Capsule())
+            }
 
-            Text(entry.foodCategory.title)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
+            HStack(spacing: 8) {
+                SummaryBadge(title: "Getrunken", value: entry.overallHydration.title)
+                SummaryBadge(title: "Kaffee", value: entry.hadCoffee ? "Ja" : "Nein")
+                SummaryBadge(title: "Wasser", value: entry.waterLevel.title)
+            }
 
             if !entry.symptoms.isEmpty {
                 Text(entry.symptoms.map { "\($0.name) (\($0.severity.title))" }.joined(separator: ", "))
@@ -78,7 +90,33 @@ private struct DayRowView: View {
                     .foregroundStyle(.secondary)
                     .lineLimit(2)
             }
+
+            if !entry.generalNote.isEmpty {
+                Text(entry.generalNote)
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+                    .lineLimit(2)
+            }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
+    }
+}
+
+private struct SummaryBadge: View {
+    let title: String
+    let value: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(title)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+            Text(value)
+                .font(.caption)
+                .fontWeight(.semibold)
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
     }
 }

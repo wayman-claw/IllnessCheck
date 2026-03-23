@@ -11,61 +11,75 @@ struct EntryEditorView: View {
     @State private var foodCategory: FoodCategory = .regular
     @State private var foodNote: String = ""
     @State private var generalNote: String = ""
+    @State private var overallHydration: IntakeLevel = .medium
+    @State private var hadCoffee = false
+    @State private var hadSoftdrinks = false
+    @State private var alcoholLevel: OptionalIntakeLevel = .none
+    @State private var waterLevel: OptionalIntakeLevel = .medium
+    @State private var otherDrinksNote: String = ""
     @State private var symptoms: [EditableSymptom] = []
-    @State private var drinks: [EditableDrink] = []
 
     var body: some View {
         NavigationStack {
             Form {
-                Section("Day") {
-                    DatePicker("Date", selection: $date, displayedComponents: .date)
+                Section("Tag") {
+                    DatePicker("Datum", selection: $date, displayedComponents: .date)
                 }
 
-                Section("Food") {
-                    Picker("Category", selection: $foodCategory) {
+                Section("Essen") {
+                    Picker("Heute gegessen", selection: $foodCategory) {
                         ForEach(FoodCategory.allCases) { category in
                             Text(category.title).tag(category)
                         }
                     }
+                    .pickerStyle(.segmented)
 
-                    TextField("Food note", text: $foodNote, axis: .vertical)
+                    TextField("Kurze Notiz zum Essen", text: $foodNote, axis: .vertical)
                 }
 
-                Section("Drinks") {
-                    ForEach($drinks) { $drink in
-                        DrinkEditorRow(drink: $drink)
+                Section("Trinken erfassen") {
+                    LabeledContent("Insgesamt getrunken") {
+                        MenuPicker(options: IntakeLevel.allCases, selection: $overallHydration)
                     }
-                    .onDelete { drinks.remove(atOffsets: $0) }
 
-                    Button("Add Drink") {
-                        drinks.append(.init())
+                    Toggle("Kaffee", isOn: $hadCoffee)
+                    Toggle("Softdrinks", isOn: $hadSoftdrinks)
+
+                    LabeledContent("Alkohol") {
+                        MenuPicker(options: OptionalIntakeLevel.allCases, selection: $alcoholLevel)
                     }
+
+                    LabeledContent("Wasser") {
+                        MenuPicker(options: OptionalIntakeLevel.allCases, selection: $waterLevel)
+                    }
+
+                    TextField("Anderes", text: $otherDrinksNote, axis: .vertical)
                 }
 
-                Section("Symptoms / Pain") {
+                Section("Beschwerden") {
+                    SymptomPresetScroller { preset in
+                        symptoms.append(.init(name: preset == .custom ? "" : preset.title))
+                    }
+
                     ForEach($symptoms) { $symptom in
                         SymptomEditorRow(symptom: $symptom)
                     }
                     .onDelete { symptoms.remove(atOffsets: $0) }
-
-                    Button("Add Symptom") {
-                        symptoms.append(.init())
-                    }
                 }
 
-                Section("Notes") {
-                    TextField("Anything worth remembering?", text: $generalNote, axis: .vertical)
+                Section("Notizen") {
+                    TextField("Was war heute noch wichtig?", text: $generalNote, axis: .vertical)
                         .lineLimit(4...8)
                 }
             }
-            .navigationTitle(entry == nil ? "New Day" : "Edit Day")
+            .navigationTitle(entry == nil ? "Check-in" : "Tag bearbeiten")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Abbrechen") { dismiss() }
                 }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
+                    Button("Speichern") {
                         save()
                     }
                 }
@@ -80,8 +94,13 @@ struct EntryEditorView: View {
         foodCategory = entry.foodCategory
         foodNote = entry.foodNote
         generalNote = entry.generalNote
+        overallHydration = entry.overallHydration
+        hadCoffee = entry.hadCoffee
+        hadSoftdrinks = entry.hadSoftdrinks
+        alcoholLevel = entry.alcoholLevel
+        waterLevel = entry.waterLevel
+        otherDrinksNote = entry.otherDrinksNote
         symptoms = entry.symptoms.map { EditableSymptom(name: $0.name, severity: $0.severity, note: $0.note) }
-        drinks = entry.drinks.map { EditableDrink(type: $0.type, amount: $0.amount, unit: $0.unit) }
     }
 
     private func save() {
@@ -90,17 +109,18 @@ struct EntryEditorView: View {
         target.foodCategory = foodCategory
         target.foodNote = foodNote
         target.generalNote = generalNote
+        target.overallHydration = overallHydration
+        target.hadCoffee = hadCoffee
+        target.hadSoftdrinks = hadSoftdrinks
+        target.alcoholLevel = alcoholLevel
+        target.waterLevel = waterLevel
+        target.otherDrinksNote = otherDrinksNote
         target.updatedAt = .now
 
         target.symptoms.removeAll()
-        target.drinks.removeAll()
 
         for symptom in symptoms where !symptom.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             target.symptoms.append(SymptomEntry(name: symptom.name, severity: symptom.severity, note: symptom.note))
-        }
-
-        for drink in drinks where drink.amount > 0 {
-            target.drinks.append(DrinkEntry(type: drink.type, amount: drink.amount, unit: drink.unit))
         }
 
         if entry == nil {
@@ -118,52 +138,60 @@ struct EditableSymptom: Identifiable {
     var note: String = ""
 }
 
-struct EditableDrink: Identifiable {
-    let id = UUID()
-    var type: DrinkType = .water
-    var amount: Double = 250
-    var unit: DrinkUnit = .milliliters
-}
-
 private struct SymptomEditorRow: View {
     @Binding var symptom: EditableSymptom
 
     var body: some View {
-        VStack(alignment: .leading) {
-            TextField("Symptom", text: $symptom.name)
-            Picker("Severity", selection: $symptom.severity) {
+        VStack(alignment: .leading, spacing: 10) {
+            TextField("Beschwerde", text: $symptom.name)
+            Picker("Stärke", selection: $symptom.severity) {
                 ForEach(SeverityLevel.allCases) { level in
                     Text(level.title).tag(level)
                 }
             }
             .pickerStyle(.segmented)
-            TextField("Optional note", text: $symptom.note)
+
+            TextField("Optionale Notiz", text: $symptom.note)
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 6)
     }
 }
 
-private struct DrinkEditorRow: View {
-    @Binding var drink: EditableDrink
+private struct MenuPicker<Option: CaseIterable & Identifiable & Hashable & TitledOption>: View where Option.AllCases: RandomAccessCollection {
+    let options: Option.AllCases
+    @Binding var selection: Option
 
     var body: some View {
-        VStack(alignment: .leading) {
-            Picker("Type", selection: $drink.type) {
-                ForEach(DrinkType.allCases) { type in
-                    Text(type.title).tag(type)
-                }
-            }
-
-            HStack {
-                TextField("Amount", value: $drink.amount, format: .number)
-                    .keyboardType(.decimalPad)
-                Picker("Unit", selection: $drink.unit) {
-                    ForEach(DrinkUnit.allCases) { unit in
-                        Text(unit.rawValue).tag(unit)
-                    }
-                }
+        Picker("", selection: $selection) {
+            ForEach(Array(options), id: \.self) { option in
+                Text(option.title).tag(option)
             }
         }
-        .padding(.vertical, 4)
+        .pickerStyle(.menu)
+    }
+}
+
+private protocol TitledOption {
+    var title: String { get }
+}
+
+extension IntakeLevel: TitledOption {}
+extension OptionalIntakeLevel: TitledOption {}
+
+private struct SymptomPresetScroller: View {
+    let onSelect: (SymptomPreset) -> Void
+
+    var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(SymptomPreset.allCases) { preset in
+                    Button(preset.title) {
+                        onSelect(preset)
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.vertical, 4)
+        }
     }
 }

@@ -7,34 +7,64 @@ final class DailyEntry {
     var foodCategoryRaw: String
     var foodNote: String
     var generalNote: String
+    var overallHydrationRaw: String
+    var hadCoffee: Bool
+    var hadSoftdrinks: Bool
+    var alcoholLevelRaw: String
+    var waterLevelRaw: String
+    var otherDrinksNote: String
     var createdAt: Date
     var updatedAt: Date
     @Relationship(deleteRule: .cascade) var symptoms: [SymptomEntry]
-    @Relationship(deleteRule: .cascade) var drinks: [DrinkEntry]
 
     init(
         date: Date = .now,
         foodCategory: FoodCategory = .regular,
         foodNote: String = "",
         generalNote: String = "",
+        overallHydration: IntakeLevel = .medium,
+        hadCoffee: Bool = false,
+        hadSoftdrinks: Bool = false,
+        alcoholLevel: OptionalIntakeLevel = .none,
+        waterLevel: OptionalIntakeLevel = .medium,
+        otherDrinksNote: String = "",
         createdAt: Date = .now,
         updatedAt: Date = .now,
-        symptoms: [SymptomEntry] = [],
-        drinks: [DrinkEntry] = []
+        symptoms: [SymptomEntry] = []
     ) {
         self.date = Calendar.current.startOfDay(for: date)
         self.foodCategoryRaw = foodCategory.rawValue
         self.foodNote = foodNote
         self.generalNote = generalNote
+        self.overallHydrationRaw = overallHydration.rawValue
+        self.hadCoffee = hadCoffee
+        self.hadSoftdrinks = hadSoftdrinks
+        self.alcoholLevelRaw = alcoholLevel.rawValue
+        self.waterLevelRaw = waterLevel.rawValue
+        self.otherDrinksNote = otherDrinksNote
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.symptoms = symptoms
-        self.drinks = drinks
     }
 
     var foodCategory: FoodCategory {
         get { FoodCategory(rawValue: foodCategoryRaw) ?? .regular }
         set { foodCategoryRaw = newValue.rawValue }
+    }
+
+    var overallHydration: IntakeLevel {
+        get { IntakeLevel(rawValue: overallHydrationRaw) ?? .medium }
+        set { overallHydrationRaw = newValue.rawValue }
+    }
+
+    var alcoholLevel: OptionalIntakeLevel {
+        get { OptionalIntakeLevel(rawValue: alcoholLevelRaw) ?? .none }
+        set { alcoholLevelRaw = newValue.rawValue }
+    }
+
+    var waterLevel: OptionalIntakeLevel {
+        get { OptionalIntakeLevel(rawValue: waterLevelRaw) ?? .medium }
+        set { waterLevelRaw = newValue.rawValue }
     }
 }
 
@@ -53,29 +83,6 @@ final class SymptomEntry {
     var severity: SeverityLevel {
         get { SeverityLevel(rawValue: severityRaw) ?? .medium }
         set { severityRaw = newValue.rawValue }
-    }
-}
-
-@Model
-final class DrinkEntry {
-    var typeRaw: String
-    var amount: Double
-    var unitRaw: String
-
-    init(type: DrinkType, amount: Double, unit: DrinkUnit = .milliliters) {
-        self.typeRaw = type.rawValue
-        self.amount = amount
-        self.unitRaw = unit.rawValue
-    }
-
-    var type: DrinkType {
-        get { DrinkType(rawValue: typeRaw) ?? .water }
-        set { typeRaw = newValue.rawValue }
-    }
-
-    var unit: DrinkUnit {
-        get { DrinkUnit(rawValue: unitRaw) ?? .milliliters }
-        set { unitRaw = newValue.rawValue }
     }
 }
 
@@ -105,22 +112,60 @@ enum SeverityLevel: String, CaseIterable, Identifiable {
     var title: String { rawValue.capitalized }
 }
 
-enum DrinkType: String, CaseIterable, Identifiable {
-    case water
-    case coffee
-    case tea
-    case alcohol
+enum IntakeLevel: String, CaseIterable, Identifiable {
+    case little
+    case medium
+    case much
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .little: return "Wenig"
+        case .medium: return "Mittel"
+        case .much: return "Viel"
+        }
+    }
+}
+
+enum OptionalIntakeLevel: String, CaseIterable, Identifiable {
+    case none
+    case little
+    case medium
+    case much
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .none: return "Nein"
+        case .little: return "Wenig"
+        case .medium: return "Mittel"
+        case .much: return "Viel"
+        }
+    }
+}
+
+enum SymptomPreset: String, CaseIterable, Identifiable {
+    case headache
+    case bellyAche
+    case nausea
+    case fatigue
+    case soreThroat
+    case backPain
     case custom
 
     var id: String { rawValue }
 
-    var title: String { rawValue.capitalized }
-}
-
-enum DrinkUnit: String, CaseIterable, Identifiable {
-    case milliliters = "ml"
-    case cups
-    case glasses
-
-    var id: String { rawValue }
+    var title: String {
+        switch self {
+        case .headache: return "Kopfschmerzen"
+        case .bellyAche: return "Bauchschmerzen"
+        case .nausea: return "Übelkeit"
+        case .fatigue: return "Müdigkeit"
+        case .soreThroat: return "Halsschmerzen"
+        case .backPain: return "Rückenschmerzen"
+        case .custom: return "Sonstiges"
+        }
+    }
 }
