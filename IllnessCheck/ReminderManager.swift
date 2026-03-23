@@ -64,13 +64,15 @@ extension ReminderManager: UNUserNotificationCenterDelegate {
         [.banner, .sound]
     }
 
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
+    @MainActor
+    func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
         guard let deepLink = response.notification.request.content.userInfo["deeplink"] as? String,
               let url = URL(string: deepLink) else { return }
 
-        let absolute = url.absoluteString
-
-        await MainActor.run {
+        handleNotificationDeepLink(url)
+    }
+}
+or.run {
             guard let reopenedURL = URL(string: absolute) else { return }
             UIApplication.shared.open(reopenedURL)
         }
