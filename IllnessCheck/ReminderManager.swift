@@ -3,8 +3,13 @@ import UserNotifications
 
 @MainActor
 final class ReminderManager: NSObject, ObservableObject {
+    enum Route: Equatable {
+        case todayCheckIn
+    }
+
     @Published var reminderEnabled: Bool = false
     @Published var reminderTime: Date = Date()
+    @Published var pendingRoute: Route?
 
     override init() {
         super.init()
@@ -42,6 +47,15 @@ final class ReminderManager: NSObject, ObservableObject {
             print("Scheduling reminder failed: \(error)")
         }
     }
+
+    func handleNotificationDeepLink(_ url: URL) {
+        guard url.scheme == "illnesscheck", url.host == "checkin" else { return }
+        pendingRoute = .todayCheckIn
+    }
+
+    func consumePendingRoute() {
+        pendingRoute = nil
+    }
 }
 
 extension ReminderManager: UNUserNotificationCenterDelegate {
@@ -54,11 +68,7 @@ extension ReminderManager: UNUserNotificationCenterDelegate {
               let url = URL(string: deepLink) else { return }
 
         await MainActor.run {
-            NotificationCenter.default.post(name: .illnessCheckDeepLinkOpened, object: url)
+            self.handleNotificationDeepLink(url)
         }
     }
-}
-
-extension Notification.Name {
-    static let illnessCheckDeepLinkOpened = Notification.Name("illnessCheckDeepLinkOpened")
 }

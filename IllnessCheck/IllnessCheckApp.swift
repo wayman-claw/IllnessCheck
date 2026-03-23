@@ -41,9 +41,10 @@ struct IllnessCheckApp: App {
                 .onOpenURL { url in
                     deepLinkManager.handle(url: url)
                 }
-                .onReceive(NotificationCenter.default.publisher(for: .illnessCheckDeepLinkOpened)) { notification in
-                    guard let url = notification.object as? URL else { return }
-                    deepLinkManager.handle(url: url)
+                .onChange(of: reminderManager.pendingRoute) { _, route in
+                    guard route == .todayCheckIn else { return }
+                    deepLinkManager.pendingRoute = .todayCheckIn
+                    reminderManager.consumePendingRoute()
                 }
         }
         .modelContainer(sharedModelContainer)
