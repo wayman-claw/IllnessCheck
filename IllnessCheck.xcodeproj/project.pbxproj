@@ -15,6 +15,7 @@
 		A10000010000000000000006 /* ReminderSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000006 /* ReminderSettingsView.swift */; };
 		A10000010000000000000007 /* DeepLinkManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000008 /* DeepLinkManager.swift */; };
 		A10000010000000000000008 /* ExportModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000009 /* ExportModels.swift */; };
+		A10000010000000000000009 /* Insights.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000010 /* Insights.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -26,6 +27,7 @@
 		A10000110000000000000006 /* ReminderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSettingsView.swift; sourceTree = "<group>"; };
 		A10000110000000000000008 /* DeepLinkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkManager.swift; sourceTree = "<group>"; };
 		A10000110000000000000009 /* ExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportModels.swift; sourceTree = "<group>"; };
+		A10000110000000000000010 /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
 		A10000110000000000000007 /* IllnessCheck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = IllnessCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -61,6 +63,7 @@
 				A10000110000000000000006 /* ReminderSettingsView.swift */,
 				A10000110000000000000008 /* DeepLinkManager.swift */,
 				A10000110000000000000009 /* ExportModels.swift */,
+				A10000110000000000000010 /* Insights.swift */,
 			);
 		};
 		A10000310000000000000003 /* Products */ = {
@@ -271,10 +274,4 @@
 /* End XCConfigurationList section */
 	};
 	rootObject = A10000810000000000000001 /* Project object */;
-}
-t section */
-	};
-	rootObject = A10000810000000000000001 /* Project object */;
-}
-Project object */;
 }
