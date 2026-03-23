@@ -23,9 +23,10 @@ A lean, modern iPhone app concept for daily health journaling with a quick end-o
 This repository was generated in a non-macOS environment, so the project cannot be built or validated here with Xcode yet.
 However, the code and Xcode project structure are prepared for opening on a Mac with Xcode.
 
-## Features in v2
+## Features in v3
 
-- Daily entry list with richer summaries
+- Visual home screen with hero card and recent-day cards
+- Dedicated day detail screen instead of only list-to-form flow
 - Create and edit daily entries
 - Food quality tracking
 - Faster drink flow:
@@ -37,8 +38,8 @@ However, the code and Xcode project structure are prepared for opening on a Mac 
   - free-text for other drinks
 - Symptom severity tracking
 - Symptom presets for quicker input
-- Notes for custom context
-- Reminder scheduling UI
+- Cleaner card-based editor UI
+- Reminder scheduling UI with a more polished layout
 - Export-friendly structure for later analytics
 
 ## Development note
@@ -54,8 +55,8 @@ The data model changed between iterations. If you see a SwiftData container load
 
 ## Recommended next steps
 
-- Validate the project in Xcode on macOS
-- Refine spacing, colors and typography after first device test
+- Validate spacing and interaction details on a real device
 - Add JSON / CSV export
 - Add weekly trends and simple correlations
+- Add app icon and brand polish
 - Consider optional Apple Health integration later

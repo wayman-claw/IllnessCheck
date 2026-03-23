@@ -21,57 +21,64 @@ struct EntryEditorView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section("Tag") {
-                    DatePicker("Datum", selection: $date, displayedComponents: .date)
-                }
+            ScrollView {
+                VStack(spacing: 18) {
+                    EditorHeroCard(date: date)
 
-                Section("Essen") {
-                    Picker("Heute gegessen", selection: $foodCategory) {
-                        ForEach(FoodCategory.allCases) { category in
-                            Text(category.title).tag(category)
+                    EditorSection(title: "Essen") {
+                        Picker("Heute gegessen", selection: $foodCategory) {
+                            ForEach(FoodCategory.allCases) { category in
+                                Text(category.title).tag(category)
+                            }
+                        }
+                        .pickerStyle(.segmented)
+
+                        TextField("Kurze Notiz zum Essen", text: $foodNote, axis: .vertical)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    EditorSection(title: "Trinken") {
+                        LabeledContent("Insgesamt") {
+                            MenuPicker(options: IntakeLevel.allCases, selection: $overallHydration)
+                        }
+                        Toggle("Kaffee", isOn: $hadCoffee)
+                        Toggle("Softdrinks", isOn: $hadSoftdrinks)
+                        LabeledContent("Alkohol") {
+                            MenuPicker(options: OptionalIntakeLevel.allCases, selection: $alcoholLevel)
+                        }
+                        LabeledContent("Wasser") {
+                            MenuPicker(options: OptionalIntakeLevel.allCases, selection: $waterLevel)
+                        }
+                        TextField("Anderes", text: $otherDrinksNote, axis: .vertical)
+                            .textFieldStyle(.roundedBorder)
+                    }
+
+                    EditorSection(title: "Beschwerden") {
+                        SymptomPresetScroller { preset in
+                            symptoms.append(.init(name: preset == .custom ? "" : preset.title))
+                        }
+
+                        if symptoms.isEmpty {
+                            Text("Keine Beschwerden hinzugefügt")
+                                .foregroundStyle(.secondary)
+                        }
+
+                        ForEach($symptoms) { $symptom in
+                            SymptomEditorCard(symptom: $symptom) {
+                                symptoms.removeAll { $0.id == symptom.id }
+                            }
                         }
                     }
-                    .pickerStyle(.segmented)
 
-                    TextField("Kurze Notiz zum Essen", text: $foodNote, axis: .vertical)
+                    EditorSection(title: "Notizen") {
+                        TextField("Was war heute noch wichtig?", text: $generalNote, axis: .vertical)
+                            .lineLimit(4...8)
+                            .textFieldStyle(.roundedBorder)
+                    }
                 }
-
-                Section("Trinken erfassen") {
-                    LabeledContent("Insgesamt getrunken") {
-                        MenuPicker(options: IntakeLevel.allCases, selection: $overallHydration)
-                    }
-
-                    Toggle("Kaffee", isOn: $hadCoffee)
-                    Toggle("Softdrinks", isOn: $hadSoftdrinks)
-
-                    LabeledContent("Alkohol") {
-                        MenuPicker(options: OptionalIntakeLevel.allCases, selection: $alcoholLevel)
-                    }
-
-                    LabeledContent("Wasser") {
-                        MenuPicker(options: OptionalIntakeLevel.allCases, selection: $waterLevel)
-                    }
-
-                    TextField("Anderes", text: $otherDrinksNote, axis: .vertical)
-                }
-
-                Section("Beschwerden") {
-                    SymptomPresetScroller { preset in
-                        symptoms.append(.init(name: preset == .custom ? "" : preset.title))
-                    }
-
-                    ForEach($symptoms) { $symptom in
-                        SymptomEditorRow(symptom: $symptom)
-                    }
-                    .onDelete { symptoms.remove(atOffsets: $0) }
-                }
-
-                Section("Notizen") {
-                    TextField("Was war heute noch wichtig?", text: $generalNote, axis: .vertical)
-                        .lineLimit(4...8)
-                }
+                .padding(20)
             }
+            .background(Color(.systemGroupedBackground))
             .navigationTitle(entry == nil ? "Check-in" : "Tag bearbeiten")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -82,6 +89,7 @@ struct EntryEditorView: View {
                     Button("Speichern") {
                         save()
                     }
+                    .fontWeight(.semibold)
                 }
             }
             .onAppear(perform: loadExistingEntry)
@@ -131,19 +139,68 @@ struct EntryEditorView: View {
     }
 }
 
-struct EditableSymptom: Identifiable {
+struct EditableSymptom: Identifiable, Equatable {
     let id = UUID()
     var name: String = ""
     var severity: SeverityLevel = .medium
     var note: String = ""
 }
 
-private struct SymptomEditorRow: View {
+private struct EditorHeroCard: View {
+    let date: Date
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Wie war dein Tag?")
+                .font(.title.bold())
+            Text(date.formatted(date: .complete, time: .omitted))
+                .foregroundStyle(.secondary)
+        }
+        .padding(20)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            LinearGradient(
+                colors: [Color.purple.opacity(0.16), Color.blue.opacity(0.12)],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            ),
+            in: RoundedRectangle(cornerRadius: 24, style: .continuous)
+        )
+    }
+}
+
+private struct EditorSection<Content: View>: View {
+    let title: String
+    @ViewBuilder let content: Content
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text(title)
+                .font(.headline)
+            VStack(alignment: .leading, spacing: 12) {
+                content
+            }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+    }
+}
+
+private struct SymptomEditorCard: View {
     @Binding var symptom: EditableSymptom
+    let onDelete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            TextField("Beschwerde", text: $symptom.name)
+            HStack {
+                TextField("Beschwerde", text: $symptom.name)
+                    .textFieldStyle(.roundedBorder)
+                Button(role: .destructive, action: onDelete) {
+                    Image(systemName: "trash")
+                }
+            }
+
             Picker("Stärke", selection: $symptom.severity) {
                 ForEach(SeverityLevel.allCases) { level in
                     Text(level.title).tag(level)
@@ -152,8 +209,10 @@ private struct SymptomEditorRow: View {
             .pickerStyle(.segmented)
 
             TextField("Optionale Notiz", text: $symptom.note)
+                .textFieldStyle(.roundedBorder)
         }
-        .padding(.vertical, 6)
+        .padding(14)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -191,7 +250,7 @@ private struct SymptomPresetScroller: View {
                     .buttonStyle(.bordered)
                 }
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 2)
         }
     }
 }
