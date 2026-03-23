@@ -4,6 +4,8 @@ import SwiftData
 struct EntryEditorView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(\.modelContext) private var modelContext
+    @EnvironmentObject private var appSettings: AppSettings
+    @Query(sort: [SortDescriptor(\DailyEntry.date, order: .reverse)]) private var allEntries: [DailyEntry]
 
     let entry: DailyEntry?
 
@@ -18,13 +20,26 @@ struct EntryEditorView: View {
     @State private var waterLevel: OptionalIntakeLevel = .medium
     @State private var otherDrinksNote: String = ""
     @State private var moodScore: Int = 3
+    @State private var cyclePhase: CyclePhase = .notSet
+    @State private var cycleDayText: String = ""
+    @State private var cycleNote: String = ""
     @State private var symptoms: [EditableSymptom] = []
+    @State private var validationMessage: String?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 18) {
                     EditorHeroCard(date: date)
+
+                    if let validationMessage {
+                        Text(validationMessage)
+                            .font(.footnote)
+                            .foregroundStyle(.red)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                            .padding(12)
+                            .background(Color.red.opacity(0.08), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
 
                     EditorSection(title: "Tag") {
                         DatePicker("Datum", selection: $date, displayedComponents: .date)
@@ -63,6 +78,24 @@ struct EntryEditorView: View {
                         }
                         TextField("Anderes", text: $otherDrinksNote, axis: .vertical)
                             .textFieldStyle(.roundedBorder)
+                    }
+
+                    if appSettings.shouldShowCycleSection {
+                        EditorSection(title: "Zyklus") {
+                            Picker("Phase", selection: $cyclePhase) {
+                                ForEach(CyclePhase.allCases) { phase in
+                                    Text(phase.title).tag(phase)
+                                }
+                            }
+                            .pickerStyle(.menu)
+
+                            TextField("Zyklustag (optional)", text: $cycleDayText)
+                                .keyboardType(.numberPad)
+                                .textFieldStyle(.roundedBorder)
+
+                            TextField("Notiz zum Zyklus", text: $cycleNote, axis: .vertical)
+                                .textFieldStyle(.roundedBorder)
+                        }
                     }
 
                     EditorSection(title: "Beschwerden") {
@@ -120,39 +153,89 @@ struct EntryEditorView: View {
         alcoholLevel = entry.alcoholLevel
         waterLevel = entry.waterLevel
         otherDrinksNote = entry.otherDrinksNote
-        moodScore = entry.moodScore
+        moodScore = min(max(entry.moodScore, 1), 5)
+        cyclePhase = entry.cyclePhase
+        cycleDayText = entry.cycleDay.map(String.init) ?? ""
+        cycleNote = entry.cycleNote
         symptoms = entry.symptoms.map { EditableSymptom(name: $0.name, severity: $0.severity, note: $0.note) }
     }
 
     private func save() {
-        let target = entry ?? DailyEntry(date: date)
-        target.date = Calendar.current.startOfDay(for: date)
+        validationMessage = nil
+
+        let normalizedDate = Calendar.current.startOfDay(for: date)
+
+        if let duplicate = allEntries.first(where: {
+            Calendar.current.isDate($0.date, inSameDayAs: normalizedDate) && $0.persistentModelID != entry?.persistentModelID
+        }) {
+            validationMessage = "Für diesen Tag existiert bereits ein Eintrag. Bitte bearbeite den vorhandenen Tag statt einen zweiten anzulegen."
+            if entry == nil {
+                populateFromExistingEntry(duplicate)
+            }
+            return
+        }
+
+        let target = entry ?? DailyEntry(date: normalizedDate)
+        target.date = normalizedDate
         target.foodCategory = foodCategory
-        target.foodNote = foodNote
-        target.generalNote = generalNote
+        target.foodNote = foodNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        target.generalNote = generalNote.trimmingCharacters(in: .whitespacesAndNewlines)
         target.overallHydration = overallHydration
         target.hadCoffee = hadCoffee
         target.hadSoftdrinks = hadSoftdrinks
         target.alcoholLevel = alcoholLevel
         target.waterLevel = waterLevel
-        target.otherDrinksNote = otherDrinksNote
-        target.moodScore = moodScore
+        target.otherDrinksNote = otherDrinksNote.trimmingCharacters(in: .whitespacesAndNewlines)
+        target.moodScore = min(max(moodScore, 1), 5)
         target.cyclePhase = appSettings.shouldShowCycleSection ? cyclePhase : .notSet
-        target.cycleDay = appSettings.shouldShowCycleSection ? Int(cycleDayText) : nil
-        target.cycleNote = appSettings.shouldShowCycleSection ? cycleNote : ""
+        target.cycleDay = appSettings.shouldShowCycleSection ? sanitizedCycleDay : nil
+        target.cycleNote = appSettings.shouldShowCycleSection ? cycleNote.trimmingCharacters(in: .whitespacesAndNewlines) : ""
         target.updatedAt = .now
 
-        target.symptoms.removeAll()
-
-        for symptom in symptoms where !symptom.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-            target.symptoms.append(SymptomEntry(name: symptom.name, severity: symptom.severity, note: symptom.note))
-        }
+        replaceSymptoms(on: target)
 
         if entry == nil {
             modelContext.insert(target)
         }
 
         dismiss()
+    }
+
+    private var sanitizedCycleDay: Int? {
+        guard let value = Int(cycleDayText), value > 0, value <= 60 else { return nil }
+        return value
+    }
+
+    private func replaceSymptoms(on target: DailyEntry) {
+        target.symptoms.removeAll()
+
+        let cleanedSymptoms = symptoms.compactMap { symptom -> SymptomEntry? in
+            let cleanedName = symptom.name.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard !cleanedName.isEmpty else { return nil }
+            return SymptomEntry(name: cleanedName, severity: symptom.severity, note: symptom.note.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
+
+        for symptom in cleanedSymptoms {
+            target.symptoms.append(symptom)
+        }
+    }
+
+    private func populateFromExistingEntry(_ existing: DailyEntry) {
+        date = existing.date
+        foodCategory = existing.foodCategory
+        foodNote = existing.foodNote
+        generalNote = existing.generalNote
+        overallHydration = existing.overallHydration
+        hadCoffee = existing.hadCoffee
+        hadSoftdrinks = existing.hadSoftdrinks
+        alcoholLevel = existing.alcoholLevel
+        waterLevel = existing.waterLevel
+        otherDrinksNote = existing.otherDrinksNote
+        moodScore = existing.moodScore
+        cyclePhase = existing.cyclePhase
+        cycleDayText = existing.cycleDay.map(String.init) ?? ""
+        cycleNote = existing.cycleNote
+        symptoms = existing.symptoms.map { EditableSymptom(name: $0.name, severity: $0.severity, note: $0.note) }
     }
 }
 
@@ -353,30 +436,12 @@ private protocol TitledOption {
 
 extension IntakeLevel: TitledOption {}
 extension OptionalIntakeLevel: TitledOption {}
+extension CyclePhase: TitledOption {}
 
 private struct SymptomPresetScroller: View {
     let onSelect: (SymptomPreset) -> Void
 
     var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(SymptomPreset.allCases) { preset in
-                    Button {
-                        onSelect(preset)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: preset.symbol)
-                            Text(preset.title)
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                }
-            }
-            .padding(.vertical, 2)
-        }
-    }
-}
-y: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(SymptomPreset.allCases) { preset in

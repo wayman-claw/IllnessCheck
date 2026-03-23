@@ -122,8 +122,13 @@ struct RootView: View {
     }
 
     private var todayEntry: DailyEntry? {
+        entry(for: .now)
+    }
+
+    private func entry(for date: Date) -> DailyEntry? {
         let calendar = Calendar.current
-        return entries.first(where: { calendar.isDateInToday($0.date) })
+        let normalized = calendar.startOfDay(for: date)
+        return entries.first(where: { calendar.isDate($0.date, inSameDayAs: normalized) })
     }
 
     private var analyticsOverview: some View {
