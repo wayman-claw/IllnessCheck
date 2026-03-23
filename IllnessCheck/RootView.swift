@@ -108,7 +108,7 @@ struct RootView: View {
 
             HStack(spacing: 10) {
                 MiniStat(title: "Einträge", value: "\(entries.count)")
-                MiniStat(title: "Kaffee-Tage", value: "\(entries.filter(\\.hadCoffee).count)")
+                MiniStat(title: "Kaffee-Tage", value: "\(entries.filter { $0.hadCoffee }.count)")
                 MiniStat(title: "Beschwerden", value: "\(entries.reduce(0) { $0 + $1.symptoms.count })")
             }
         }
