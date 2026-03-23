@@ -14,6 +14,9 @@ final class DailyEntry {
     var waterLevelRaw: String
     var otherDrinksNote: String
     var moodScore: Int
+    var cyclePhaseRaw: String
+    var cycleDay: Int?
+    var cycleNote: String
     var createdAt: Date
     var updatedAt: Date
     @Relationship(deleteRule: .cascade) var symptoms: [SymptomEntry]
@@ -30,6 +33,9 @@ final class DailyEntry {
         waterLevel: OptionalIntakeLevel = .medium,
         otherDrinksNote: String = "",
         moodScore: Int = 3,
+        cyclePhase: CyclePhase = .notSet,
+        cycleDay: Int? = nil,
+        cycleNote: String = "",
         createdAt: Date = .now,
         updatedAt: Date = .now,
         symptoms: [SymptomEntry] = []
@@ -45,6 +51,9 @@ final class DailyEntry {
         self.waterLevelRaw = waterLevel.rawValue
         self.otherDrinksNote = otherDrinksNote
         self.moodScore = moodScore
+        self.cyclePhaseRaw = cyclePhase.rawValue
+        self.cycleDay = cycleDay
+        self.cycleNote = cycleNote
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.symptoms = symptoms
@@ -68,6 +77,11 @@ final class DailyEntry {
     var waterLevel: OptionalIntakeLevel {
         get { OptionalIntakeLevel(rawValue: waterLevelRaw) ?? .medium }
         set { waterLevelRaw = newValue.rawValue }
+    }
+
+    var cyclePhase: CyclePhase {
+        get { CyclePhase(rawValue: cyclePhaseRaw) ?? .notSet }
+        set { cyclePhaseRaw = newValue.rawValue }
     }
 }
 

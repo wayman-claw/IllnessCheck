@@ -5,6 +5,7 @@ import SwiftData
 struct IllnessCheckApp: App {
     @StateObject private var reminderManager = ReminderManager()
     @StateObject private var deepLinkManager = DeepLinkManager()
+    @StateObject private var appSettings = AppSettings()
 
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
@@ -74,4 +75,3 @@ enum SwiftDataStoreResetter {
         }
     }
 }
-

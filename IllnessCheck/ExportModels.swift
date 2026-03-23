@@ -17,6 +17,9 @@ struct ExportDailyEntry: Codable {
     let waterLevel: String
     let otherDrinksNote: String
     let moodScore: Int
+    let cyclePhase: String
+    let cycleDay: Int?
+    let cycleNote: String
     let symptoms: [ExportSymptom]
 }
 
