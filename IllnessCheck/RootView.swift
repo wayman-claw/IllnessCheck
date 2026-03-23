@@ -6,6 +6,7 @@ struct RootView: View {
     @Query(sort: [SortDescriptor(\DailyEntry.date, order: .reverse)]) private var entries: [DailyEntry]
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var deepLinkManager: DeepLinkManager
+    @EnvironmentObject private var appSettings: AppSettings
     @State private var showingNewEntry = false
     @State private var exportJSON: String = ""
     @State private var showingExport = false
@@ -88,7 +89,13 @@ struct RootView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("DayTrace")
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    NavigationLink {
+                        ProfileSettingsView()
+                    } label: {
+                        Image(systemName: "person.crop.circle")
+                    }
+
                     NavigationLink {
                         ReminderSettingsView()
                     } label: {
@@ -199,6 +206,7 @@ struct RootView: View {
     }
 
     private func openTodayCheckIn() {
+        selectedEntryForEditing = nil
         showingNewEntry = true
     }
 }
@@ -377,6 +385,18 @@ private struct DayDetailView: View {
                     DetailRow(label: "Score", value: "\(entry.moodScore)/5")
                 }
 
+                if appSettings.shouldShowCycleSection && (entry.cyclePhase != .notSet || entry.cycleDay != nil || !entry.cycleNote.isEmpty) {
+                    DetailSection(title: "Zyklus") {
+                        DetailRow(label: "Phase", value: entry.cyclePhase.title)
+                        if let cycleDay = entry.cycleDay {
+                            DetailRow(label: "Zyklustag", value: "\(cycleDay)")
+                        }
+                        if !entry.cycleNote.isEmpty {
+                            DetailRow(label: "Notiz", value: entry.cycleNote)
+                        }
+                    }
+                }
+
                 DetailSection(title: "Beschwerden") {
                     if entry.symptoms.isEmpty {
                         Text("Keine Beschwerden erfasst")
@@ -514,26 +534,6 @@ private struct AchievementPlaceholderCard: View {
 private struct ExportPreviewView: View {
     let json: String
     @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            ScrollView {
-                Text(json)
-                    .font(.system(.footnote, design: .monospaced))
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding()
-            }
-            .navigationTitle("JSON Export")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fertig") { dismiss() }
-                }
-            }
-        }
-    }
-}
-ate var dismiss
 
     var body: some View {
         NavigationStack {
