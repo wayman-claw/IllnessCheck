@@ -27,12 +27,12 @@
 		A10000110000000000000004 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A10000110000000000000005 /* EntryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditorView.swift; sourceTree = "<group>"; };
 		A10000110000000000000006 /* ReminderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSettingsView.swift; sourceTree = "<group>"; };
+		A10000110000000000000007 /* IllnessCheck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = IllnessCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000110000000000000008 /* DeepLinkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkManager.swift; sourceTree = "<group>"; };
 		A10000110000000000000009 /* ExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportModels.swift; sourceTree = "<group>"; };
 		A10000110000000000000010 /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
 		A10000110000000000000011 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		A10000110000000000000012 /* ProfileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsView.swift; sourceTree = "<group>"; };
-		A10000110000000000000007 /* IllnessCheck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = IllnessCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -50,14 +50,12 @@
 			isa = PBXGroup;
 			children = (
 				A10000310000000000000002 /* IllnessCheck */,
-				A10000310000000000000003 /* Products */,
+				A10000310000000000000003,
 			);
 			sourceTree = "<group>";
 		};
 		A10000310000000000000002 /* IllnessCheck */ = {
 			isa = PBXGroup;
-			path = IllnessCheck;
-			sourceTree = "<group>";
 			children = (
 				A10000110000000000000001 /* IllnessCheckApp.swift */,
 				A10000110000000000000002 /* Models.swift */,
@@ -71,8 +69,10 @@
 				A10000110000000000000011 /* AppSettings.swift */,
 				A10000110000000000000012 /* ProfileSettingsView.swift */,
 			);
+			path = IllnessCheck;
+			sourceTree = "<group>";
 		};
-		A10000310000000000000003 /* Products */ = {
+		A10000310000000000000003 = {
 			isa = PBXGroup;
 			children = (
 				A10000110000000000000007 /* IllnessCheck.app */,
@@ -84,7 +84,7 @@
 /* Begin PBXNativeTarget section */
 		A10000410000000000000001 /* IllnessCheck */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A10000510000000000000001 /* Build configuration list for PBXNativeTarget \"IllnessCheck\" */;
+			buildConfigurationList = A10000510000000000000001 /* Build configuration list for PBXNativeTarget "IllnessCheck" */;
 			buildPhases = (
 				A10000610000000000000001 /* Sources */,
 				A10000210000000000000001 /* Frameworks */,
@@ -114,7 +114,7 @@
 					};
 				};
 			};
-			buildConfigurationList = A10000510000000000000002 /* Build configuration list for PBXProject \"IllnessCheck\" */;
+			buildConfigurationList = A10000510000000000000002 /* Build configuration list for PBXProject "IllnessCheck" */;
 			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -123,7 +123,7 @@
 				Base,
 			);
 			mainGroup = A10000310000000000000001;
-			productRefGroup = A10000310000000000000003 /* Products */;
+			productRefGroup = A10000310000000000000003;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -170,17 +170,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8598V53L45;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = DayTrace;
-				INFOPLIST_KEY_CFBundleURLTypes = (
-					{
-						CFBundleURLName = illnesscheck;
-						CFBundleURLSchemes = (
-							illnesscheck,
-						);
-					},
-				);
+				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleURLName = illnesscheck;\n    CFBundleURLSchemes =     (\n        illnesscheck\n    );\n}";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -207,17 +200,10 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = 8598V53L45;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = DayTrace;
-				INFOPLIST_KEY_CFBundleURLTypes = (
-					{
-						CFBundleURLName = illnesscheck;
-						CFBundleURLSchemes = (
-							illnesscheck,
-						);
-					},
-				);
+				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleURLName = illnesscheck;\n    CFBundleURLSchemes =     (\n        illnesscheck\n    );\n}";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
