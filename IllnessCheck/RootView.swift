@@ -377,9 +377,15 @@ private struct DayDetailView: View {
                             .foregroundStyle(.secondary)
                     } else {
                         ForEach(entry.symptoms) { symptom in
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("\(symptom.name) · \(symptom.severity.title)")
-                                    .font(.subheadline.weight(.semibold))
+                            VStack(alignment: .leading, spacing: 6) {
+                                HStack(spacing: 8) {
+                                    if let preset = SymptomPreset.preset(for: symptom.name) {
+                                        Image(systemName: preset.symbol)
+                                            .foregroundStyle(.orange)
+                                    }
+                                    Text("\(symptom.name) · \(symptom.severity.title)")
+                                        .font(.subheadline.weight(.semibold))
+                                }
                                 if !symptom.note.isEmpty {
                                     Text(symptom.note)
                                         .font(.footnote)
@@ -510,18 +516,6 @@ private struct ExportPreviewView: View {
                     .font(.system(.footnote, design: .monospaced))
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding()
-            }
-            .navigationTitle("JSON Export")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    Button("Fertig") { dismiss() }
-                }
-            }
-        }
-    }
-}
-padding()
             }
             .navigationTitle("JSON Export")
             .navigationBarTitleDisplayMode(.inline)
