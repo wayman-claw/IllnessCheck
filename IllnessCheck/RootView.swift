@@ -341,6 +341,7 @@ private struct SymptomBadge: View {
 }
 
 private struct DayDetailView: View {
+    @EnvironmentObject private var appSettings: AppSettings
     let entry: DailyEntry
     let onEdit: () -> Void
 
@@ -508,6 +509,26 @@ private struct AchievementPlaceholderCard: View {
 private struct ExportPreviewView: View {
     let json: String
     @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                Text(json)
+                    .font(.system(.footnote, design: .monospaced))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding()
+            }
+            .navigationTitle("JSON Export")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Fertig") { dismiss() }
+                }
+            }
+        }
+    }
+}
+ate var dismiss
 
     var body: some View {
         NavigationStack {

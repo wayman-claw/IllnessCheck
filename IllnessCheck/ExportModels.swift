@@ -43,6 +43,9 @@ enum ExportFactory {
                     waterLevel: $0.waterLevel.rawValue,
                     otherDrinksNote: $0.otherDrinksNote,
                     moodScore: $0.moodScore,
+                    cyclePhase: $0.cyclePhase.rawValue,
+                    cycleDay: $0.cycleDay,
+                    cycleNote: $0.cycleNote,
                     symptoms: $0.symptoms.map {
                         ExportSymptom(name: $0.name, severity: $0.severity.rawValue, note: $0.note)
                     }

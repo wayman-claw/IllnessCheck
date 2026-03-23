@@ -38,6 +38,7 @@ struct IllnessCheckApp: App {
             RootView()
                 .environmentObject(reminderManager)
                 .environmentObject(deepLinkManager)
+                .environmentObject(appSettings)
                 .onOpenURL { url in
                     deepLinkManager.handle(url: url)
                 }
@@ -71,5 +72,8 @@ enum SwiftDataStoreResetter {
                 try? fileManager.removeItem(at: fileURL)
             }
         }
+    }
+}
+
     }
 }

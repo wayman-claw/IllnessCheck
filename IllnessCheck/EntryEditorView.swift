@@ -137,6 +137,9 @@ struct EntryEditorView: View {
         target.waterLevel = waterLevel
         target.otherDrinksNote = otherDrinksNote
         target.moodScore = moodScore
+        target.cyclePhase = appSettings.shouldShowCycleSection ? cyclePhase : .notSet
+        target.cycleDay = appSettings.shouldShowCycleSection ? Int(cycleDayText) : nil
+        target.cycleNote = appSettings.shouldShowCycleSection ? cycleNote : ""
         target.updatedAt = .now
 
         target.symptoms.removeAll()
@@ -355,6 +358,25 @@ private struct SymptomPresetScroller: View {
     let onSelect: (SymptomPreset) -> Void
 
     var body: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 8) {
+                ForEach(SymptomPreset.allCases) { preset in
+                    Button {
+                        onSelect(preset)
+                    } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: preset.symbol)
+                            Text(preset.title)
+                        }
+                    }
+                    .buttonStyle(.bordered)
+                }
+            }
+            .padding(.vertical, 2)
+        }
+    }
+}
+y: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
                 ForEach(SymptomPreset.allCases) { preset in

@@ -157,6 +157,44 @@ enum OptionalIntakeLevel: String, CaseIterable, Identifiable {
     }
 }
 
+enum CyclePhase: String, CaseIterable, Identifiable {
+    case notSet
+    case menstruation
+    case follicular
+    case ovulation
+    case luteal
+    case uncertain
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .notSet: return "Nicht gesetzt"
+        case .menstruation: return "Menstruation"
+        case .follicular: return "Follikelphase"
+        case .ovulation: return "Ovulation"
+        case .luteal: return "Lutealphase"
+        case .uncertain: return "Unsicher"
+        }
+    }
+}
+
+enum UserSex: String, CaseIterable, Identifiable {
+    case male
+    case female
+    case undisclosed
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .male: return "Männlich"
+        case .female: return "Weiblich"
+        case .undisclosed: return "Keine Angabe"
+        }
+    }
+}
+
 enum SymptomPreset: String, CaseIterable, Identifiable {
     case headache
     case bellyAche

@@ -16,6 +16,7 @@ DayTrace is designed as a personal health reflection app:
 - iPhone-focused UI
 - reminder-to-check-in flow
 - editable historic day entries
+- optional profile-based cycle tracking
 - dashboard with first charts
 - gamification foundation
 - export-ready data model
