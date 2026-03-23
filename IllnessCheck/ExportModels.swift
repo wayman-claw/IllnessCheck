@@ -16,6 +16,7 @@ struct ExportDailyEntry: Codable {
     let alcoholLevel: String
     let waterLevel: String
     let otherDrinksNote: String
+    let moodScore: Int
     let symptoms: [ExportSymptom]
 }
 
@@ -62,5 +63,8 @@ enum ExportFactory {
         }
 
         return string
+    }
+}
+return string
     }
 }

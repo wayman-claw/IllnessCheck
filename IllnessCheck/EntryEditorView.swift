@@ -17,6 +17,7 @@ struct EntryEditorView: View {
     @State private var alcoholLevel: OptionalIntakeLevel = .none
     @State private var waterLevel: OptionalIntakeLevel = .medium
     @State private var otherDrinksNote: String = ""
+    @State private var moodScore: Int = 3
     @State private var symptoms: [EditableSymptom] = []
 
     var body: some View {
@@ -24,6 +25,15 @@ struct EntryEditorView: View {
             ScrollView {
                 VStack(spacing: 18) {
                     EditorHeroCard(date: date)
+
+                    EditorSection(title: "Tag") {
+                        DatePicker("Datum", selection: $date, displayedComponents: .date)
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Tagesgefühl")
+                                .font(.subheadline.weight(.medium))
+                            MoodScorePicker(score: $moodScore)
+                        }
+                    }
 
                     EditorSection(title: "Essen") {
                         Picker("Heute gegessen", selection: $foodCategory) {
@@ -38,11 +48,13 @@ struct EntryEditorView: View {
                     }
 
                     EditorSection(title: "Trinken") {
-                        LabeledContent("Insgesamt") {
-                            MenuPicker(options: IntakeLevel.allCases, selection: $overallHydration)
+                        DrinkLevelCard(title: "Insgesamt", icon: "drop.circle.fill", selection: $overallHydration)
+
+                        HStack(spacing: 12) {
+                            ToggleChip(title: "Kaffee", icon: "cup.and.saucer.fill", isOn: $hadCoffee)
+                            ToggleChip(title: "Softdrinks", icon: "takeoutbag.and.cup.and.straw.fill", isOn: $hadSoftdrinks)
                         }
-                        Toggle("Kaffee", isOn: $hadCoffee)
-                        Toggle("Softdrinks", isOn: $hadSoftdrinks)
+
                         LabeledContent("Alkohol") {
                             MenuPicker(options: OptionalIntakeLevel.allCases, selection: $alcoholLevel)
                         }
@@ -79,7 +91,7 @@ struct EntryEditorView: View {
                 .padding(20)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle(entry == nil ? "Check-in" : "Tag bearbeiten")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -108,6 +120,7 @@ struct EntryEditorView: View {
         alcoholLevel = entry.alcoholLevel
         waterLevel = entry.waterLevel
         otherDrinksNote = entry.otherDrinksNote
+        moodScore = entry.moodScore
         symptoms = entry.symptoms.map { EditableSymptom(name: $0.name, severity: $0.severity, note: $0.note) }
     }
 
@@ -123,6 +136,7 @@ struct EntryEditorView: View {
         target.alcoholLevel = alcoholLevel
         target.waterLevel = waterLevel
         target.otherDrinksNote = otherDrinksNote
+        target.moodScore = moodScore
         target.updatedAt = .now
 
         target.symptoms.removeAll()
@@ -184,6 +198,106 @@ private struct EditorSection<Content: View>: View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
         }
+    }
+}
+
+private struct MoodScorePicker: View {
+    @Binding var score: Int
+
+    var body: some View {
+        HStack(spacing: 10) {
+            ForEach(1...5, id: \.self) { value in
+                Button {
+                    score = value
+                } label: {
+                    Image(systemName: value <= score ? "heart.fill" : "heart")
+                        .font(.title3)
+                        .foregroundStyle(value <= score ? .pink : .secondary)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                }
+                .buttonStyle(.plain)
+            }
+        }
+    }
+}
+
+private struct DrinkLevelCard: View {
+    let title: String
+    let icon: String
+    @Binding var selection: IntakeLevel
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Label(title, systemImage: icon)
+                    .font(.subheadline.weight(.medium))
+                Spacer()
+                Text(selection.title)
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.blue.opacity(0.1), in: Capsule())
+            }
+
+            HStack(spacing: 12) {
+                ForEach(IntakeLevel.allCases) { option in
+                    Button {
+                        selection = option
+                    } label: {
+                        VStack(spacing: 8) {
+                            WaterGlassIcon(fillFraction: option.fillFraction, isSelected: selection == option)
+                                .frame(width: 32, height: 40)
+                            Text(option.title)
+                                .font(.caption)
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 10)
+                        .background(selection == option ? Color.blue.opacity(0.12) : Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+        }
+    }
+}
+
+private struct WaterGlassIcon: View {
+    let fillFraction: Double
+    let isSelected: Bool
+
+    var body: some View {
+        GeometryReader { geometry in
+            let height = geometry.size.height
+            let width = geometry.size.width
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(isSelected ? Color.blue : Color.secondary.opacity(0.5), lineWidth: 2)
+                RoundedRectangle(cornerRadius: 6, style: .continuous)
+                    .fill(Color.blue.opacity(0.7))
+                    .frame(width: width - 8, height: max(6, (height - 8) * fillFraction))
+                    .padding(.bottom, 4)
+            }
+        }
+    }
+}
+
+private struct ToggleChip: View {
+    let title: String
+    let icon: String
+    @Binding var isOn: Bool
+
+    var body: some View {
+        Button {
+            isOn.toggle()
+        } label: {
+            Label(title, systemImage: icon)
+                .font(.subheadline.weight(.medium))
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(isOn ? Color.orange.opacity(0.16) : Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
     }
 }
 

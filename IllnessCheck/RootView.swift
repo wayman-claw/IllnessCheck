@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import Charts
 
 struct RootView: View {
     @Query(sort: [SortDescriptor(\DailyEntry.date, order: .reverse)]) private var entries: [DailyEntry]
@@ -8,18 +9,22 @@ struct RootView: View {
     @State private var showingNewEntry = false
     @State private var exportJSON: String = ""
     @State private var showingExport = false
+    @State private var selectedEntryForEditing: DailyEntry?
 
     private var latestEntry: DailyEntry? { entries.first }
+    private var insights: AppInsights { InsightsBuilder.build(from: entries) }
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
-                    HeroCardView(latestEntry: latestEntry) {
+                    HeroCardView(latestEntry: latestEntry, appName: "DayTrace") {
                         openTodayCheckIn()
                     }
 
                     analyticsOverview
+                    chartSection
+                    achievementsSection
 
                     if entries.isEmpty {
                         ContentUnavailableView(
@@ -45,12 +50,29 @@ struct RootView: View {
 
                             ForEach(entries) { entry in
                                 NavigationLink {
-                                    DayDetailView(entry: entry)
+                                    DayDetailView(entry: entry) {
+                                        selectedEntryForEditing = entry
+                                    }
                                 } label: {
                                     DayRowCard(entry: entry)
                                 }
                                 .buttonStyle(.plain)
+                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+                                    Button("Bearbeiten") {
+                                        selectedEntryForEditing = entry
+                                    }
+                                    .tint(.blue)
+
+                                    Button("Löschen", role: .destructive) {
+                                        delete(entry)
+                                    }
+                                }
                                 .contextMenu {
+                                    Button {
+                                        selectedEntryForEditing = entry
+                                    } label: {
+                                        Label("Bearbeiten", systemImage: "pencil")
+                                    }
                                     Button(role: .destructive) {
                                         delete(entry)
                                     } label: {
@@ -64,7 +86,7 @@ struct RootView: View {
                 .padding(20)
             }
             .background(Color(.systemGroupedBackground))
-            .navigationTitle("IllnessCheck")
+            .navigationTitle("DayTrace")
             .toolbar {
                 ToolbarItem(placement: .topBarLeading) {
                     NavigationLink {
@@ -85,6 +107,9 @@ struct RootView: View {
             .sheet(isPresented: $showingNewEntry) {
                 EntryEditorView(entry: todayEntry)
             }
+            .sheet(item: $selectedEntryForEditing) { entry in
+                EntryEditorView(entry: entry)
+            }
             .sheet(isPresented: $showingExport) {
                 ExportPreviewView(json: exportJSON)
             }
@@ -103,16 +128,65 @@ struct RootView: View {
 
     private var analyticsOverview: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Überblick")
+            Text("Dashboard")
                 .font(.headline)
 
             HStack(spacing: 10) {
                 MiniStat(title: "Einträge", value: "\(entries.count)")
-                MiniStat(title: "Kaffee-Tage", value: "\(entries.filter { $0.hadCoffee }.count)")
-                MiniStat(title: "Beschwerden", value: "\(entries.reduce(0) { $0 + $1.symptoms.count })")
+                MiniStat(title: "Streak", value: "\(insights.streakDays) Tage")
+                MiniStat(title: "Mood", value: entries.isEmpty ? "–" : String(format: "%.1f/5", insights.averageMood))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var chartSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Verlauf")
+                .font(.headline)
+
+            Chart(recentEntries) { entry in
+                LineMark(
+                    x: .value("Tag", entry.date),
+                    y: .value("Tagesgefühl", entry.moodScore)
+                )
+                .foregroundStyle(.pink)
+
+                BarMark(
+                    x: .value("Tag", entry.date),
+                    y: .value("Hydration", entry.overallHydration.fillFraction * 5)
+                )
+                .foregroundStyle(.blue.opacity(0.35))
+            }
+            .frame(height: 220)
+            .padding(12)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var achievementsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Motivation")
+                .font(.headline)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 12) {
+                    ForEach(insights.earnedAchievements) { achievement in
+                        AchievementCard(achievement: achievement)
+                    }
+
+                    if insights.earnedAchievements.isEmpty {
+                        AchievementPlaceholderCard()
+                    }
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var recentEntries: [DailyEntry] {
+        Array(entries.sorted { $0.date < $1.date }.suffix(10))
     }
 
     private func delete(_ entry: DailyEntry) {
@@ -126,20 +200,21 @@ struct RootView: View {
 
 private struct HeroCardView: View {
     let latestEntry: DailyEntry?
+    let appName: String
     let onCreate: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            Text("Daily Health Check")
+            Text(appName)
                 .font(.largeTitle.bold())
-            Text("Schneller Abend-Check-in mit klarer Struktur statt großem Tagebuch.")
+            Text("Dein täglicher Health-Check mit Struktur, Verlauf und kleinen Motivationshilfen.")
                 .foregroundStyle(.secondary)
 
             if let latestEntry {
                 HStack(spacing: 10) {
                     MiniStat(title: "Letzter Eintrag", value: latestEntry.date.formatted(date: .abbreviated, time: .omitted))
                     MiniStat(title: "Getrunken", value: latestEntry.overallHydration.title)
-                    MiniStat(title: "Beschwerden", value: latestEntry.symptoms.isEmpty ? "Keine" : "\(latestEntry.symptoms.count)")
+                    MiniStat(title: "Mood", value: "\(latestEntry.moodScore)/5")
                 }
             }
 
@@ -196,8 +271,11 @@ private struct DayRowCard: View {
 
                 Spacer()
 
-                Image(systemName: "chevron.right")
-                    .foregroundStyle(.tertiary)
+                Text("\(entry.moodScore)/5")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.pink.opacity(0.12), in: Capsule())
             }
 
             HStack(spacing: 10) {
@@ -238,7 +316,7 @@ private struct SummaryBadge: View {
 
 private struct DayDetailView: View {
     let entry: DailyEntry
-    @State private var showingEdit = false
+    let onEdit: () -> Void
 
     var body: some View {
         ScrollView {
@@ -261,6 +339,10 @@ private struct DayDetailView: View {
                     if !entry.foodNote.isEmpty {
                         DetailRow(label: "Notiz", value: entry.foodNote)
                     }
+                }
+
+                DetailSection(title: "Tagesgefühl") {
+                    DetailRow(label: "Score", value: "\(entry.moodScore)/5")
                 }
 
                 DetailSection(title: "Beschwerden") {
@@ -300,12 +382,9 @@ private struct DayDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button("Bearbeiten") {
-                    showingEdit = true
+                    onEdit()
                 }
             }
-        }
-        .sheet(isPresented: $showingEdit) {
-            EntryEditorView(entry: entry)
         }
     }
 }
@@ -356,6 +435,41 @@ private struct DetailRow: View {
             Text(value)
                 .font(.body)
         }
+    }
+}
+
+private struct AchievementCard: View {
+    let achievement: Achievement
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: achievement.symbol)
+                .font(.title2)
+                .foregroundStyle(.yellow)
+            Text(achievement.title)
+                .font(.subheadline.weight(.semibold))
+        }
+        .padding(16)
+        .frame(width: 150, alignment: .leading)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct AchievementPlaceholderCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Image(systemName: "target")
+                .font(.title2)
+                .foregroundStyle(.secondary)
+            Text("Badges folgen bald")
+                .font(.subheadline.weight(.semibold))
+            Text("Mit mehr Einträgen schaltest du kleine Erfolge frei.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .frame(width: 180, alignment: .leading)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
 

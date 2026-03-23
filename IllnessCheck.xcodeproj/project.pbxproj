@@ -146,6 +146,7 @@
 				A10000010000000000000006 /* ReminderSettingsView.swift in Sources */,
 				A10000010000000000000007 /* DeepLinkManager.swift in Sources */,
 				A10000010000000000000008 /* ExportModels.swift in Sources */,
+				A10000010000000000000009 /* Insights.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -270,4 +271,10 @@
 /* End XCConfigurationList section */
 	};
 	rootObject = A10000810000000000000001 /* Project object */;
+}
+t section */
+	};
+	rootObject = A10000810000000000000001 /* Project object */;
+}
+Project object */;
 }

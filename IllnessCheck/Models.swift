@@ -13,6 +13,7 @@ final class DailyEntry {
     var alcoholLevelRaw: String
     var waterLevelRaw: String
     var otherDrinksNote: String
+    var moodScore: Int
     var createdAt: Date
     var updatedAt: Date
     @Relationship(deleteRule: .cascade) var symptoms: [SymptomEntry]
@@ -28,6 +29,7 @@ final class DailyEntry {
         alcoholLevel: OptionalIntakeLevel = .none,
         waterLevel: OptionalIntakeLevel = .medium,
         otherDrinksNote: String = "",
+        moodScore: Int = 3,
         createdAt: Date = .now,
         updatedAt: Date = .now,
         symptoms: [SymptomEntry] = []
@@ -42,6 +44,7 @@ final class DailyEntry {
         self.alcoholLevelRaw = alcoholLevel.rawValue
         self.waterLevelRaw = waterLevel.rawValue
         self.otherDrinksNote = otherDrinksNote
+        self.moodScore = moodScore
         self.createdAt = createdAt
         self.updatedAt = updatedAt
         self.symptoms = symptoms
@@ -126,6 +129,14 @@ enum IntakeLevel: String, CaseIterable, Identifiable {
         case .much: return "Viel"
         }
     }
+
+    var fillFraction: Double {
+        switch self {
+        case .little: return 0.3
+        case .medium: return 0.6
+        case .much: return 0.95
+        }
+    }
 }
 
 enum OptionalIntakeLevel: String, CaseIterable, Identifiable {
@@ -166,6 +177,36 @@ enum SymptomPreset: String, CaseIterable, Identifiable {
         case .soreThroat: return "Halsschmerzen"
         case .backPain: return "Rückenschmerzen"
         case .custom: return "Sonstiges"
+        }
+    }
+}
+
+enum Achievement: String, CaseIterable, Identifiable {
+    case firstEntry
+    case streak3
+    case streak7
+    case hydrationWin
+    case reflectionPro
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .firstEntry: return "Erster Check-in"
+        case .streak3: return "3 Tage am Stück"
+        case .streak7: return "7 Tage am Stück"
+        case .hydrationWin: return "Wasser-Woche"
+        case .reflectionPro: return "Reflektiert"
+        }
+    }
+
+    var symbol: String {
+        switch self {
+        case .firstEntry: return "sparkles"
+        case .streak3: return "flame.fill"
+        case .streak7: return "bolt.heart.fill"
+        case .hydrationWin: return "drop.fill"
+        case .reflectionPro: return "book.fill"
         }
     }
 }
