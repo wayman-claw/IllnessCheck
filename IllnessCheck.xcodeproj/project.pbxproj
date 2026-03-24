@@ -18,6 +18,7 @@
 		A10000010000000000000009 /* Insights.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000010 /* Insights.swift */; };
 		A10000010000000000000010 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000011 /* AppSettings.swift */; };
 		A10000010000000000000011 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000012 /* ProfileSettingsView.swift */; };
+		A51810882F72715200FC9D06 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A51810872F72715200FC9D06 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -33,6 +34,7 @@
 		A10000110000000000000010 /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
 		A10000110000000000000011 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		A10000110000000000000012 /* ProfileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsView.swift; sourceTree = "<group>"; };
+		A51810872F72715200FC9D06 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -49,6 +51,7 @@
 		A10000310000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				A51810872F72715200FC9D06 /* Assets.xcassets */,
 				A10000310000000000000002 /* IllnessCheck */,
 				A10000310000000000000003,
 			);
@@ -137,6 +140,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A51810882F72715200FC9D06 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
