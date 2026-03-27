@@ -24,7 +24,10 @@ struct RootView: View {
                     }
 
                     analyticsOverview
-                    chartSection
+                    moodChartSection
+                    comparisonSection
+                    symptomSection
+                    insightsSection
                     achievementsSection
 
                     if entries.isEmpty {
@@ -140,21 +143,24 @@ struct RootView: View {
 
     private var analyticsOverview: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Dashboard")
+            Text("Überblick")
                 .font(.headline)
 
-            HStack(spacing: 10) {
+            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
                 MiniStat(title: "Einträge", value: "\(entries.count)")
                 MiniStat(title: "Streak", value: "\(insights.streakDays) Tage")
-                MiniStat(title: "Mood", value: entries.isEmpty ? "–" : String(format: "%.1f/5", insights.averageMood))
+                MiniStat(title: "Mood Ø", value: entries.isEmpty ? "–" : String(format: "%.1f/5", insights.averageMood))
+                MiniStat(title: "Gute Tage", value: entries.isEmpty ? "–" : "\(Int((insights.goodDayShare * 100).rounded()))%")
+                MiniStat(title: "Symptomfrei", value: "\(insights.symptomFreeDays)")
+                MiniStat(title: "Beschwerden/Tag", value: entries.isEmpty ? "–" : String(format: "%.1f", insights.averageSymptomsPerDay))
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
-    private var chartSection: some View {
+    private var moodChartSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Verlauf")
+            Text("Wohlbefinden & Hydration")
                 .font(.headline)
 
             Chart(recentEntries) { entry in
@@ -163,16 +169,71 @@ struct RootView: View {
                     y: .value("Tagesgefühl", entry.moodScore)
                 )
                 .foregroundStyle(.pink)
+                .lineStyle(StrokeStyle(lineWidth: 3))
+
+                AreaMark(
+                    x: .value("Tag", entry.date),
+                    y: .value("Tagesgefühl", entry.moodScore)
+                )
+                .foregroundStyle(.pink.opacity(0.12))
 
                 BarMark(
                     x: .value("Tag", entry.date),
                     y: .value("Hydration", entry.overallHydration.fillFraction * 5)
                 )
-                .foregroundStyle(.blue.opacity(0.35))
+                .foregroundStyle(.blue.opacity(0.25))
             }
-            .frame(height: 220)
+            .frame(height: 240)
             .padding(12)
             .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var comparisonSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Einflussfaktoren")
+                .font(.headline)
+
+            if insights.comparisons.isEmpty {
+                EmptyInsightCard(text: "Sobald genug Daten vorliegen, siehst du hier Vergleiche wie Kaffee vs. kein Kaffee oder viel Wasser vs. wenig Wasser.")
+            } else {
+                ForEach(insights.comparisons) { comparison in
+                    ComparisonCard(comparison: comparison)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var symptomSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Beschwerden")
+                .font(.headline)
+
+            if insights.topSymptoms.isEmpty {
+                EmptyInsightCard(text: "Noch keine Beschwerden erfasst. Sobald Symptome eingetragen werden, erscheinen hier Häufigkeit und Stärke.")
+            } else {
+                ForEach(insights.topSymptoms) { symptom in
+                    SymptomStatCard(stat: symptom)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
+    private var insightsSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Insights")
+                .font(.headline)
+
+            if insights.messages.isEmpty {
+                EmptyInsightCard(text: "Sobald genug Daten gesammelt wurden, erscheinen hier automatisch formulierte Beobachtungen.")
+            } else {
+                ForEach(insights.messages) { message in
+                    InsightMessageCard(message: message)
+                }
+            }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -198,7 +259,7 @@ struct RootView: View {
     }
 
     private var recentEntries: [DailyEntry] {
-        Array(entries.sorted { $0.date < $1.date }.suffix(10))
+        Array(entries.sorted { $0.date < $1.date }.suffix(14))
     }
 
     private func delete(_ entry: DailyEntry) {
@@ -220,7 +281,7 @@ private struct HeroCardView: View {
         VStack(alignment: .leading, spacing: 14) {
             Text(appName)
                 .font(.largeTitle.bold())
-            Text("Dein täglicher Health-Check mit Struktur, Verlauf und kleinen Motivationshilfen.")
+            Text("Dein täglicher Health-Check mit Struktur, Verlauf und echten Mustern.")
                 .foregroundStyle(.secondary)
 
             if let latestEntry {
@@ -265,6 +326,103 @@ private struct MiniStat: View {
         .padding(12)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(.white.opacity(0.7), in: RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+}
+
+private struct ComparisonCard: View {
+    let comparison: ComparisonInsight
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text(comparison.title)
+                .font(.subheadline.weight(.semibold))
+
+            HStack(spacing: 12) {
+                ComparisonValueCard(label: comparison.leftLabel, value: comparison.leftValue, tint: .blue)
+                ComparisonValueCard(label: comparison.rightLabel, value: comparison.rightValue, tint: .teal)
+            }
+        }
+        .padding(16)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct ComparisonValueCard: View {
+    let label: String
+    let value: Double
+    let tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text(String(format: "%.1f", value))
+                .font(.title3.weight(.bold))
+                .foregroundStyle(tint)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct SymptomStatCard: View {
+    let stat: SymptomStat
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Text(stat.name)
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                Text("\(stat.count)x")
+                    .font(.caption.weight(.semibold))
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(.orange.opacity(0.12), in: Capsule())
+            }
+
+            HStack {
+                Text("Ø Stärke")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Spacer()
+                Text(String(format: "%.1f / 3", stat.averageSeverity))
+                    .font(.caption.weight(.semibold))
+            }
+        }
+        .padding(16)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct InsightMessageCard: View {
+    let message: InsightMessage
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(message.title)
+                .font(.subheadline.weight(.semibold))
+            Text(message.body)
+                .font(.footnote)
+                .foregroundStyle(.secondary)
+        }
+        .padding(16)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct EmptyInsightCard: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.footnote)
+            .foregroundStyle(.secondary)
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
 
