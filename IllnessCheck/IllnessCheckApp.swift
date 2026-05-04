@@ -6,33 +6,15 @@ struct IllnessCheckApp: App {
     @StateObject private var reminderManager = ReminderManager()
     @StateObject private var deepLinkManager = DeepLinkManager()
     @StateObject private var appSettings = AppSettings()
+    @StateObject private var storeRecoveryAnnouncer: StoreRecoveryAnnouncer
 
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            DailyEntry.self,
-            SymptomEntry.self
-        ])
+    let sharedModelContainer: ModelContainer
 
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [configuration])
-        } catch {
-            print("Primary SwiftData container creation failed: \(error)")
-
-            do {
-                try SwiftDataStoreResetter.resetDefaultStoreFiles()
-                return try ModelContainer(for: schema, configurations: [configuration])
-            } catch {
-                do {
-                    let inMemoryConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-                    return try ModelContainer(for: schema, configurations: [inMemoryConfiguration])
-                } catch {
-                    fatalError("Could not create ModelContainer even after reset fallback: \(error)")
-                }
-            }
-        }
-    }()
+    init() {
+        let bootstrap = StoreBootstrap.makeContainer()
+        self.sharedModelContainer = bootstrap.container
+        _storeRecoveryAnnouncer = StateObject(wrappedValue: StoreRecoveryAnnouncer(event: bootstrap.event))
+    }
 
     var body: some Scene {
         WindowGroup {
@@ -40,6 +22,7 @@ struct IllnessCheckApp: App {
                 .environmentObject(reminderManager)
                 .environmentObject(deepLinkManager)
                 .environmentObject(appSettings)
+                .environmentObject(storeRecoveryAnnouncer)
                 .onOpenURL { url in
                     deepLinkManager.handle(url: url)
                 }
@@ -50,28 +33,5 @@ struct IllnessCheckApp: App {
                 }
         }
         .modelContainer(sharedModelContainer)
-    }
-}
-
-enum SwiftDataStoreResetter {
-    static func resetDefaultStoreFiles() throws {
-        let fileManager = FileManager.default
-        let supportURL = try fileManager.url(for: .applicationSupportDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-
-        let candidateNames = [
-            "default.store",
-            "default.store-shm",
-            "default.store-wal",
-            "IllnessCheck.store",
-            "IllnessCheck.store-shm",
-            "IllnessCheck.store-wal"
-        ]
-
-        for name in candidateNames {
-            let fileURL = supportURL.appendingPathComponent(name)
-            if fileManager.fileExists(atPath: fileURL.path) {
-                try? fileManager.removeItem(at: fileURL)
-            }
-        }
     }
 }
