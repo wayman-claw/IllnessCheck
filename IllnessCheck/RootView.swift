@@ -7,6 +7,7 @@ struct RootView: View {
     @Environment(\.modelContext) private var modelContext
     @EnvironmentObject private var deepLinkManager: DeepLinkManager
     @EnvironmentObject private var appSettings: AppSettings
+    @EnvironmentObject private var storeRecoveryAnnouncer: StoreRecoveryAnnouncer
     @State private var showingNewEntry = false
     @State private var exportJSON: String = ""
     @State private var showingExport = false
@@ -19,6 +20,8 @@ struct RootView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
+                    storeRecoveryBanner
+
                     HeroCardView(latestEntry: latestEntry, appName: "DayTrace") {
                         openTodayCheckIn()
                     }
@@ -139,6 +142,68 @@ struct RootView: View {
         let calendar = Calendar.current
         let normalized = calendar.startOfDay(for: date)
         return entries.first(where: { calendar.isDate($0.date, inSameDayAs: normalized) })
+    }
+
+    @ViewBuilder
+    private var storeRecoveryBanner: some View {
+        if let event = storeRecoveryAnnouncer.visibleEvent,
+           let title = storeRecoveryAnnouncer.bannerTitle,
+           let message = storeRecoveryAnnouncer.bannerMessage {
+            HStack(alignment: .top, spacing: 10) {
+                Image(systemName: bannerSymbol(for: event))
+                    .font(.title3)
+                    .foregroundStyle(.white)
+                    .padding(.top, 2)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(title)
+                        .font(.subheadline.weight(.semibold))
+                        .foregroundStyle(.white)
+                    Text(message)
+                        .font(.footnote)
+                        .foregroundStyle(.white.opacity(0.92))
+                }
+                Spacer(minLength: 8)
+                Button {
+                    withAnimation { storeRecoveryAnnouncer.dismiss() }
+                } label: {
+                    Image(systemName: "xmark")
+                        .font(.footnote.weight(.semibold))
+                        .foregroundStyle(.white)
+                        .padding(6)
+                        .background(.white.opacity(0.18), in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Schließen")
+            }
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .fill(bannerGradient(for: event))
+            )
+            .transition(.move(edge: .top).combined(with: .opacity))
+        }
+    }
+
+    private func bannerSymbol(for event: StoreBootstrapEvent) -> String {
+        switch event {
+        case .restoredFromBackup: return "arrow.counterclockwise.circle.fill"
+        case .pendingRestoreWaiting: return "clock.arrow.circlepath"
+        case .fellBackToInMemory: return "exclamationmark.triangle.fill"
+        case .clean: return "checkmark.circle.fill"
+        }
+    }
+
+    private func bannerGradient(for event: StoreBootstrapEvent) -> LinearGradient {
+        switch event {
+        case .restoredFromBackup:
+            return LinearGradient(colors: [.teal, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .pendingRestoreWaiting:
+            return LinearGradient(colors: [.orange, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .fellBackToInMemory:
+            return LinearGradient(colors: [.red, .orange], startPoint: .topLeading, endPoint: .bottomTrailing)
+        case .clean:
+            return LinearGradient(colors: [.gray], startPoint: .topLeading, endPoint: .bottomTrailing)
+        }
     }
 
     private var analyticsOverview: some View {
