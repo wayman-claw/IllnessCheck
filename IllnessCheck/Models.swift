@@ -87,21 +87,102 @@ final class DailyEntry {
 
 @Model
 final class SymptomEntry {
+    /// Legacy free-text name. Kept for audit/back-compat: any pre-V2 entries had only
+    /// this field. New entries (V2+) leave this as nil and rely on `category`.
     var name: String
     var severityRaw: String
     var note: String
 
-    init(name: String, severity: SeverityLevel, note: String = "") {
+    /// Reference to a SymptomCategory. Nil only for legacy rows that haven't been
+    /// migrated yet (should not happen in practice — the V2 migration always assigns
+    /// a category, even if it has to create one). Kept optional because SwiftData
+    /// likes optional relationships and CloudKit will too.
+    var category: SymptomCategory?
+
+    init(name: String, severity: SeverityLevel, note: String = "", category: SymptomCategory? = nil) {
         self.name = name
         self.severityRaw = severity.rawValue
         self.note = note
+        self.category = category
     }
 
     var severity: SeverityLevel {
         get { SeverityLevel(rawValue: severityRaw) ?? .medium }
         set { severityRaw = newValue.rawValue }
     }
+
+    /// Display name preferring the linked category, falling back to the legacy
+    /// stored name. Always returns something usable.
+    var displayName: String {
+        category?.displayName ?? name
+    }
+
+    /// Stable analytics key. Prefers the category slug; falls back to a normalized
+    /// version of the legacy name so historic rows still aggregate predictably.
+    var analyticsKey: String {
+        if let slug = category?.slug { return slug }
+        return SymptomCategorySlug.normalize(name)
+    }
 }
+
+/// First-class category for symptoms. Built-ins are seeded once on V2 migration and
+/// can be renamed but not archived. User-created categories can be archived (soft
+/// delete). Slug is the stable analytics key and is unique.
+@Model
+final class SymptomCategory {
+    @Attribute(.unique) var slug: String
+    var displayName: String
+    var symbolName: String
+    var isBuiltIn: Bool
+    var sortOrder: Int
+    var isArchived: Bool
+    var createdAt: Date
+
+    init(
+        slug: String,
+        displayName: String,
+        symbolName: String,
+        isBuiltIn: Bool,
+        sortOrder: Int,
+        isArchived: Bool = false,
+        createdAt: Date = .now
+    ) {
+        self.slug = slug
+        self.displayName = displayName
+        self.symbolName = symbolName
+        self.isBuiltIn = isBuiltIn
+        self.sortOrder = sortOrder
+        self.isArchived = isArchived
+        self.createdAt = createdAt
+    }
+}
+
+// MARK: - Slug helpers
+
+enum SymptomCategorySlug {
+    /// Normalize an arbitrary string into a slug-ish stable key. Lowercases,
+    /// trims, replaces whitespace with dashes, strips diacritics. Used for both
+    /// the built-in slugs and any future fallback keys.
+    static func normalize(_ raw: String) -> String {
+        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let folded = trimmed.folding(options: .diacriticInsensitive, locale: .current)
+        var output = ""
+        var lastWasDash = false
+        for scalar in folded.unicodeScalars {
+            if CharacterSet.alphanumerics.contains(scalar) {
+                output.unicodeScalars.append(scalar)
+                lastWasDash = false
+            } else if !lastWasDash, !output.isEmpty {
+                output.append("-")
+                lastWasDash = true
+            }
+        }
+        if output.hasSuffix("-") { output.removeLast() }
+        return output.isEmpty ? "unnamed" : output
+    }
+}
+
+// MARK: - Existing enums (unchanged)
 
 enum FoodCategory: String, CaseIterable, Identifiable {
     case healthy
@@ -209,6 +290,9 @@ enum UserSex: String, CaseIterable, Identifiable {
     }
 }
 
+/// Built-in symptom presets. After V2 migration these become rows in
+/// `SymptomCategory` with `isBuiltIn = true`. The enum stays around as the
+/// canonical source of truth for the built-in seed data.
 enum SymptomPreset: String, CaseIterable, Identifiable {
     case headache
     case bellyAche
@@ -216,9 +300,21 @@ enum SymptomPreset: String, CaseIterable, Identifiable {
     case fatigue
     case soreThroat
     case backPain
-    case custom
 
     var id: String { rawValue }
+
+    /// Stable slug. Must match the slug produced by SymptomCategorySlug.normalize
+    /// for the canonical German title — that's how the V2 migration de-duplicates.
+    var slug: String {
+        switch self {
+        case .headache: return "kopfschmerzen"
+        case .bellyAche: return "bauchschmerzen"
+        case .nausea: return "ubelkeit"
+        case .fatigue: return "mudigkeit"
+        case .soreThroat: return "halsschmerzen"
+        case .backPain: return "ruckenschmerzen"
+        }
+    }
 
     var title: String {
         switch self {
@@ -228,7 +324,6 @@ enum SymptomPreset: String, CaseIterable, Identifiable {
         case .fatigue: return "Müdigkeit"
         case .soreThroat: return "Halsschmerzen"
         case .backPain: return "Rückenschmerzen"
-        case .custom: return "Sonstiges"
         }
     }
 
@@ -240,13 +335,11 @@ enum SymptomPreset: String, CaseIterable, Identifiable {
         case .fatigue: return "moon.zzz.fill"
         case .soreThroat: return "bandage.fill"
         case .backPain: return "figure.walk"
-        case .custom: return "cross.case.fill"
         }
     }
 
-    static func preset(for symptomName: String) -> SymptomPreset? {
-        let normalized = symptomName.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        return allCases.first { $0.title.lowercased() == normalized }
+    static var orderedSeed: [SymptomPreset] {
+        [.headache, .bellyAche, .nausea, .fatigue, .soreThroat, .backPain]
     }
 }
 

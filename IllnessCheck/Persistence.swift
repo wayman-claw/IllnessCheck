@@ -41,9 +41,9 @@ enum PersistenceLog {
 
 // MARK: - Versioned schema (V1)
 
-/// SchemaV1 is the *current* shape of the data model, declared as a VersionedSchema.
-/// It must mirror the @Model types in `Models.swift` exactly. Future schema changes
-/// should land as SchemaV2, SchemaV3, ... with explicit migration stages.
+/// SchemaV1 is the original shape of the data model: free-text symptom names, no
+/// SymptomCategory entity. We keep it declared here so SwiftData can still open
+/// V1 stores and migrate them to V2.
 enum SchemaV1: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
 
@@ -52,11 +52,95 @@ enum SchemaV1: VersionedSchema {
     }
 }
 
-/// The migration plan. Today this is a single-stage plan covering V1 only.
-/// When SchemaV2 is introduced we extend `schemas` and `stages` accordingly.
+/// SchemaV2 introduces SymptomCategory and adds a `category` relationship on
+/// SymptomEntry. The legacy `name` stays on SymptomEntry as an audit field.
+enum SchemaV2: VersionedSchema {
+    static var versionIdentifier: Schema.Version { Schema.Version(2, 0, 0) }
+
+    static var models: [any PersistentModel.Type] {
+        [DailyEntry.self, SymptomEntry.self, SymptomCategory.self]
+    }
+}
+
+/// Migration plan: V1 -> V2. The custom stage seeds built-in categories and
+/// rewires every existing SymptomEntry to point at a category.
 enum DayTraceMigrationPlan: SchemaMigrationPlan {
-    static var schemas: [any VersionedSchema.Type] { [SchemaV1.self] }
-    static var stages: [MigrationStage] { [] }
+    static var schemas: [any VersionedSchema.Type] { [SchemaV1.self, SchemaV2.self] }
+    static var stages: [MigrationStage] { [v1ToV2] }
+
+    static let v1ToV2 = MigrationStage.custom(
+        fromVersion: SchemaV1.self,
+        toVersion: SchemaV2.self,
+        willMigrate: nil,
+        didMigrate: { context in
+            let logger = Logger(subsystem: "app.daytrace.persistence", category: "migration")
+            logger.notice("V1->V2: starting symptom-category migration")
+
+            // 1. Seed built-ins idempotently. Look for an existing slug first;
+            //    if not present, create. We never overwrite a user-renamed built-in.
+            let existingCategories = (try? context.fetch(FetchDescriptor<SymptomCategory>())) ?? []
+            var bySlug: [String: SymptomCategory] = Dictionary(uniqueKeysWithValues: existingCategories.map { ($0.slug, $0) })
+
+            for (idx, preset) in SymptomPreset.orderedSeed.enumerated() {
+                if bySlug[preset.slug] == nil {
+                    let cat = SymptomCategory(
+                        slug: preset.slug,
+                        displayName: preset.title,
+                        symbolName: preset.symbol,
+                        isBuiltIn: true,
+                        sortOrder: idx,
+                        isArchived: false
+                    )
+                    context.insert(cat)
+                    bySlug[preset.slug] = cat
+                    logger.info("V1->V2: seeded built-in \(preset.slug, privacy: .public)")
+                }
+            }
+
+            // 2. Walk every SymptomEntry, attach a category. Map by normalized name.
+            //    If a normalized name doesn't match a built-in, create a user category
+            //    on the fly and reuse it for any further entries with the same name.
+            let allEntries = (try? context.fetch(FetchDescriptor<SymptomEntry>())) ?? []
+            var nextSortOrder = SymptomPreset.orderedSeed.count
+            var migrated = 0
+            var newUserCategories = 0
+
+            for entry in allEntries {
+                if entry.category != nil { continue } // already linked, skip
+                let raw = entry.name
+                let slug = SymptomCategorySlug.normalize(raw)
+                if let existing = bySlug[slug] {
+                    entry.category = existing
+                } else {
+                    let displayName = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+                    let safeName = displayName.isEmpty ? "Unbenannt" : displayName
+                    let cat = SymptomCategory(
+                        slug: slug,
+                        displayName: safeName,
+                        symbolName: "cross.case.fill",
+                        isBuiltIn: false,
+                        sortOrder: nextSortOrder,
+                        isArchived: false
+                    )
+                    context.insert(cat)
+                    bySlug[slug] = cat
+                    entry.category = cat
+                    nextSortOrder += 1
+                    newUserCategories += 1
+                    logger.info("V1->V2: created user category \(slug, privacy: .public)")
+                }
+                migrated += 1
+            }
+
+            do {
+                try context.save()
+                logger.notice("V1->V2: linked \(migrated, privacy: .public) entries; created \(newUserCategories, privacy: .public) user categories")
+            } catch {
+                logger.error("V1->V2: save failed: \(String(describing: error), privacy: .public)")
+                throw error
+            }
+        }
+    )
 }
 
 // MARK: - Pending-restore marker (UserDefaults)
@@ -145,15 +229,17 @@ private enum StorePaths {
 // MARK: - Schema identity
 
 private enum SchemaIdentity {
+    /// The currently-active versioned schema. Update this constant when a new
+    /// schema version is introduced.
+    static let activeVersionedSchema: any VersionedSchema.Type = SchemaV2.self
+
     /// Stable, deterministic identifier for the current compiled schema, derived from
-    /// the model type names. We deliberately do NOT include property lists here because
-    /// SwiftData's reflection across OS versions is not stable enough to rely on.
-    /// Bumping the SchemaV1.versionIdentifier (or moving to SchemaV2) is the official
-    /// way to signal a schema change. We mix the version identifier in here so that
-    /// any version bump rotates the identifier automatically.
+    /// the model type names + the active version. Any version bump rotates the
+    /// identifier automatically, which in turn triggers a pre-migration backup on
+    /// the next launch.
     static var current: String {
-        let v = SchemaV1.versionIdentifier
-        let names = SchemaV1.models.map { String(describing: $0) }.sorted().joined(separator: ",")
+        let v = activeVersionedSchema.versionIdentifier
+        let names = activeVersionedSchema.models.map { String(describing: $0) }.sorted().joined(separator: ",")
         return "v\(v.major).\(v.minor).\(v.patch)|models=\(names)"
     }
 
@@ -356,7 +442,7 @@ enum StoreBootstrap {
     // MARK: helpers
 
     private static func tryMakeOnDiskContainer() -> ModelContainer? {
-        let schema = Schema(versionedSchema: SchemaV1.self)
+        let schema = Schema(versionedSchema: SchemaV2.self)
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         do {
             return try ModelContainer(for: schema, migrationPlan: DayTraceMigrationPlan.self, configurations: [config])
@@ -367,7 +453,7 @@ enum StoreBootstrap {
     }
 
     private static func makeInMemoryContainer() -> ModelContainer {
-        let schema = Schema(versionedSchema: SchemaV1.self)
+        let schema = Schema(versionedSchema: SchemaV2.self)
         let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
         // If even an in-memory container fails, we're so far gone that crashing is the
         // only honest signal. But this is virtually impossible.

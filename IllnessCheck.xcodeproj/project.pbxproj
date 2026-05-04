@@ -19,6 +19,7 @@
 		A10000010000000000000010 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000011 /* AppSettings.swift */; };
 		A10000010000000000000011 /* ProfileSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000012 /* ProfileSettingsView.swift */; };
 		A10000010000000000000012 /* Persistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000013 /* Persistence.swift */; };
+		A10000010000000000000013 /* SymptomCategoriesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000014 /* SymptomCategoriesSettingsView.swift */; };
 		A51810882F72715200FC9D06 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A51810872F72715200FC9D06 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
@@ -36,6 +37,7 @@
 		A10000110000000000000011 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		A10000110000000000000012 /* ProfileSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileSettingsView.swift; sourceTree = "<group>"; };
 		A10000110000000000000013 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
+		A10000110000000000000014 /* SymptomCategoriesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomCategoriesSettingsView.swift; sourceTree = "<group>"; };
 		A51810872F72715200FC9D06 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -74,6 +76,7 @@
 				A10000110000000000000011 /* AppSettings.swift */,
 				A10000110000000000000012 /* ProfileSettingsView.swift */,
 				A10000110000000000000013 /* Persistence.swift */,
+				A10000110000000000000014 /* SymptomCategoriesSettingsView.swift */,
 			);
 			path = IllnessCheck;
 			sourceTree = "<group>";
@@ -166,6 +169,7 @@
 				A10000010000000000000010 /* AppSettings.swift in Sources */,
 				A10000010000000000000011 /* ProfileSettingsView.swift in Sources */,
 				A10000010000000000000012 /* Persistence.swift in Sources */,
+				A10000010000000000000013 /* SymptomCategoriesSettingsView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

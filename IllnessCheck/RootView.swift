@@ -557,13 +557,11 @@ private struct SymptomBadge: View {
     let symptom: SymptomEntry
 
     var body: some View {
-        let preset = SymptomPreset.preset(for: symptom.name)
-
         HStack(spacing: 6) {
-            if let preset {
-                Image(systemName: preset.symbol)
+            if let symbol = symptom.category?.symbolName {
+                Image(systemName: symbol)
             }
-            Text(symptom.name)
+            Text(symptom.displayName)
         }
         .font(.caption)
         .padding(.horizontal, 10)
@@ -628,11 +626,11 @@ private struct DayDetailView: View {
                         ForEach(entry.symptoms) { symptom in
                             VStack(alignment: .leading, spacing: 6) {
                                 HStack(spacing: 8) {
-                                    if let preset = SymptomPreset.preset(for: symptom.name) {
-                                        Image(systemName: preset.symbol)
+                                    if let symbol = symptom.category?.symbolName {
+                                        Image(systemName: symbol)
                                             .foregroundStyle(.orange)
                                     }
-                                    Text("\(symptom.name) · \(symptom.severity.title)")
+                                    Text("\(symptom.displayName) · \(symptom.severity.title)")
                                         .font(.subheadline.weight(.semibold))
                                 }
                                 if !symptom.note.isEmpty {

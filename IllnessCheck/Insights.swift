@@ -11,6 +11,7 @@ struct ComparisonInsight: Identifiable {
 
 struct SymptomStat: Identifiable {
     let id = UUID()
+    let slug: String
     let name: String
     let count: Int
     let averageSeverity: Double
@@ -72,11 +73,15 @@ enum InsightsBuilder {
     }
 
     private static func buildTopSymptoms(from entries: [DailyEntry]) -> [SymptomStat] {
-        let grouped = Dictionary(grouping: entries.flatMap(\.symptoms)) { $0.name }
+        // Group by stable analytics key (category slug, falling back to a normalized
+        // legacy name). The display name comes from the linked category when present.
+        let allSymptoms = entries.flatMap(\.symptoms)
+        let grouped = Dictionary(grouping: allSymptoms) { $0.analyticsKey }
 
-        return grouped.map { name, symptoms in
+        return grouped.map { slug, symptoms in
             let severityAverage = Double(symptoms.map { severityScore(for: $0.severity) }.reduce(0, +)) / Double(symptoms.count)
-            return SymptomStat(name: name, count: symptoms.count, averageSeverity: severityAverage)
+            let displayName = symptoms.first?.displayName ?? slug
+            return SymptomStat(slug: slug, name: displayName, count: symptoms.count, averageSeverity: severityAverage)
         }
         .sorted {
             if $0.count == $1.count {
