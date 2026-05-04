@@ -28,7 +28,7 @@
 		A10000110000000000000004 /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
 		A10000110000000000000005 /* EntryEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntryEditorView.swift; sourceTree = "<group>"; };
 		A10000110000000000000006 /* ReminderSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReminderSettingsView.swift; sourceTree = "<group>"; };
-		A10000110000000000000007 /* IllnessCheck.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = IllnessCheck.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A10000110000000000000007 /* DayTrace.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = DayTrace.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A10000110000000000000008 /* DeepLinkManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DeepLinkManager.swift; sourceTree = "<group>"; };
 		A10000110000000000000009 /* ExportModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExportModels.swift; sourceTree = "<group>"; };
 		A10000110000000000000010 /* Insights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Insights.swift; sourceTree = "<group>"; };
@@ -78,16 +78,16 @@
 		A10000310000000000000003 = {
 			isa = PBXGroup;
 			children = (
-				A10000110000000000000007 /* IllnessCheck.app */,
+				A10000110000000000000007 /* DayTrace.app */,
 			);
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		A10000410000000000000001 /* IllnessCheck */ = {
+		A10000410000000000000001 /* DayTrace */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = A10000510000000000000001 /* Build configuration list for PBXNativeTarget "IllnessCheck" */;
+			buildConfigurationList = A10000510000000000000001 /* Build configuration list for PBXNativeTarget "DayTrace" */;
 			buildPhases = (
 				A10000610000000000000001 /* Sources */,
 				A10000210000000000000001 /* Frameworks */,
@@ -97,9 +97,9 @@
 			);
 			dependencies = (
 			);
-			name = IllnessCheck;
+			name = DayTrace;
 			productName = IllnessCheck;
-			productReference = A10000110000000000000007 /* IllnessCheck.app */;
+			productReference = A10000110000000000000007 /* DayTrace.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -130,7 +130,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				A10000410000000000000001 /* IllnessCheck */,
+				A10000410000000000000001 /* DayTrace */,
 			);
 		};
 /* End PBXProject section */
@@ -175,8 +175,11 @@
 				"ASSETCATALOG_COMPILER_APPICON_NAME[sdk=iphoneos*]" = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 8598V53L45;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = DayTrace;
 				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleURLName = illnesscheck;\n    CFBundleURLSchemes =     (\n        illnesscheck\n    );\n}";
@@ -191,8 +194,10 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 0.9.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.waymanclaw.IllnessCheck;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tdwdevelopments.DayTrace;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = DayTrace_Profile;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -207,8 +212,11 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = YES;
 				CLANG_ENABLE_OBJC_WEAK = YES;
-				CODE_SIGN_STYLE = Automatic;
+				"CODE_SIGN_IDENTITY[sdk=iphoneos*]" = "iPhone Developer";
+				CODE_SIGN_STYLE = Manual;
 				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = "";
+				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = 8598V53L45;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = DayTrace;
 				INFOPLIST_KEY_CFBundleURLTypes = "{\n    CFBundleURLName = illnesscheck;\n    CFBundleURLSchemes =     (\n        illnesscheck\n    );\n}";
@@ -222,9 +230,11 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.waymanclaw.IllnessCheck;
+				MARKETING_VERSION = 1.1;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tdwdevelopments.DayTrace;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
+				"PROVISIONING_PROFILE_SPECIFIER[sdk=iphoneos*]" = DayTrace_Profile;
 				SDKROOT = iphoneos;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -323,7 +333,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		A10000510000000000000001 /* Build configuration list for PBXNativeTarget "IllnessCheck" */ = {
+		A10000510000000000000001 /* Build configuration list for PBXNativeTarget "DayTrace" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				A10000910000000000000001 /* Debug */,
