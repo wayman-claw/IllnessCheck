@@ -452,8 +452,14 @@ enum Achievement: String, CaseIterable, Identifiable {
     case firstEntry
     case streak3
     case streak7
+    case streak14
+    case streak30
     case hydrationWin
     case reflectionPro
+    case perfectWeek
+    case symptomFree7
+    case monthExplorer
+    case firstCorrelation
 
     var id: String { rawValue }
 
@@ -462,8 +468,14 @@ enum Achievement: String, CaseIterable, Identifiable {
         case .firstEntry: return "Erster Check-in"
         case .streak3: return "3 Tage am Stück"
         case .streak7: return "7 Tage am Stück"
+        case .streak14: return "2 Wochen Streak"
+        case .streak30: return "30 Tage Streak"
         case .hydrationWin: return "Wasser-Woche"
         case .reflectionPro: return "Reflektiert"
+        case .perfectWeek: return "Goldene Woche"
+        case .symptomFree7: return "7 Tage symptomfrei"
+        case .monthExplorer: return "Monatsentdecker"
+        case .firstCorrelation: return "Mustererkenner"
         }
     }
 
@@ -472,8 +484,32 @@ enum Achievement: String, CaseIterable, Identifiable {
         case .firstEntry: return "sparkles"
         case .streak3: return "flame.fill"
         case .streak7: return "bolt.heart.fill"
+        case .streak14: return "flame.circle.fill"
+        case .streak30: return "crown.fill"
         case .hydrationWin: return "drop.fill"
         case .reflectionPro: return "book.fill"
+        case .perfectWeek: return "sun.max.fill"
+        case .symptomFree7: return "heart.circle.fill"
+        case .monthExplorer: return "calendar.badge.checkmark"
+        case .firstCorrelation: return "chart.line.uptrend.xyaxis"
+        }
+    }
+
+    /// Short hint shown on the achievement card, gives the user a sense of
+    /// what unlocked it (or what they're working towards if locked).
+    var hint: String {
+        switch self {
+        case .firstEntry: return "Dein allererster Eintrag"
+        case .streak3: return "3 Tage in Folge erfasst"
+        case .streak7: return "Eine ganze Woche Streak"
+        case .streak14: return "14 Tage durchgehalten"
+        case .streak30: return "30 Tage Disziplin"
+        case .hydrationWin: return "5+ Tage gut getrunken"
+        case .reflectionPro: return "5+ Tage mit Notizen"
+        case .perfectWeek: return "7 Tage in Folge mit Top-Stimmung"
+        case .symptomFree7: return "7 Tage in Folge ohne Beschwerden"
+        case .monthExplorer: return "Einen ganzen Monat erfasst"
+        case .firstCorrelation: return "Erstes Muster freigeschaltet"
         }
     }
 }
