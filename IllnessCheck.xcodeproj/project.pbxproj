@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 56;
+	objectVersion = 70;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -23,6 +23,16 @@
 		A51810882F72715200FC9D06 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A51810872F72715200FC9D06 /* Assets.xcassets */; };
 /* End PBXBuildFile section */
 
+/* Begin PBXContainerItemProxy section */
+		A56C16062FA9DAE00021CD07 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = A10000810000000000000001 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = A10000410000000000000001;
+			remoteInfo = DayTrace;
+		};
+/* End PBXContainerItemProxy section */
+
 /* Begin PBXFileReference section */
 		A10000110000000000000001 /* IllnessCheckApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IllnessCheckApp.swift; sourceTree = "<group>"; };
 		A10000110000000000000002 /* Models.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Models.swift; sourceTree = "<group>"; };
@@ -39,10 +49,22 @@
 		A10000110000000000000013 /* Persistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Persistence.swift; sourceTree = "<group>"; };
 		A10000110000000000000014 /* SymptomCategoriesSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SymptomCategoriesSettingsView.swift; sourceTree = "<group>"; };
 		A51810872F72715200FC9D06 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A56C16022FA9DAE00021CD07 /* DayTraceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DayTraceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		A56C16032FA9DAE00021CD07 /* DayTraceTests */ = {isa = PBXFileSystemSynchronizedRootGroup; explicitFileTypes = {}; explicitFolders = (); path = DayTraceTests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		A10000210000000000000001 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A56C15FF2FA9DAE00021CD07 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -58,6 +80,7 @@
 				A51810872F72715200FC9D06 /* Assets.xcassets */,
 				A10000310000000000000002 /* IllnessCheck */,
 				A10000310000000000000003,
+				A56C16032FA9DAE00021CD07 /* DayTraceTests */,
 			);
 			sourceTree = "<group>";
 		};
@@ -85,6 +108,7 @@
 			isa = PBXGroup;
 			children = (
 				A10000110000000000000007 /* DayTrace.app */,
+				A56C16022FA9DAE00021CD07 /* DayTraceTests.xctest */,
 			);
 			sourceTree = "<group>";
 		};
@@ -108,6 +132,29 @@
 			productReference = A10000110000000000000007 /* DayTrace.app */;
 			productType = "com.apple.product-type.application";
 		};
+		A56C16012FA9DAE00021CD07 /* DayTraceTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A56C160A2FA9DAE00021CD07 /* Build configuration list for PBXNativeTarget "DayTraceTests" */;
+			buildPhases = (
+				A56C15FE2FA9DAE00021CD07 /* Sources */,
+				A56C15FF2FA9DAE00021CD07 /* Frameworks */,
+				A56C16002FA9DAE00021CD07 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				A56C16072FA9DAE00021CD07 /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				A56C16032FA9DAE00021CD07 /* DayTraceTests */,
+			);
+			name = DayTraceTests;
+			packageProductDependencies = (
+			);
+			productName = DayTraceTests;
+			productReference = A56C16022FA9DAE00021CD07 /* DayTraceTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -115,11 +162,15 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = 1;
-				LastSwiftUpdateCheck = 1600;
+				LastSwiftUpdateCheck = 2620;
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					A10000410000000000000001 = {
 						CreatedOnToolsVersion = 16.0;
+					};
+					A56C16012FA9DAE00021CD07 = {
+						CreatedOnToolsVersion = 26.2;
+						TestTargetID = A10000410000000000000001;
 					};
 				};
 			};
@@ -137,6 +188,7 @@
 			projectRoot = "";
 			targets = (
 				A10000410000000000000001 /* DayTrace */,
+				A56C16012FA9DAE00021CD07 /* DayTraceTests */,
 			);
 		};
 /* End PBXProject section */
@@ -147,6 +199,13 @@
 			buildActionMask = 2147483647;
 			files = (
 				A51810882F72715200FC9D06 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A56C16002FA9DAE00021CD07 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -173,7 +232,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		A56C15FE2FA9DAE00021CD07 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		A56C16072FA9DAE00021CD07 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = A10000410000000000000001 /* DayTrace */;
+			targetProxy = A56C16062FA9DAE00021CD07 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		A10000910000000000000001 /* Debug */ = {
@@ -340,6 +414,98 @@
 			};
 			name = Release;
 		};
+		A56C16082FA9DAE00021CD07 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 8598V53L45;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tdwdevelopments.DayTraceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DayTrace.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DayTrace";
+			};
+			name = Debug;
+		};
+		A56C16092FA9DAE00021CD07 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 8598V53L45;
+				ENABLE_NS_ASSERTIONS = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 26.2;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MARKETING_VERSION = 1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.tdwdevelopments.DayTraceTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = NO;
+				SWIFT_APPROACHABLE_CONCURRENCY = YES;
+				SWIFT_EMIT_LOC_STRINGS = NO;
+				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/DayTrace.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/DayTrace";
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -357,6 +523,15 @@
 			buildConfigurations = (
 				A10000910000000000000003 /* Debug */,
 				A10000910000000000000004 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A56C160A2FA9DAE00021CD07 /* Build configuration list for PBXNativeTarget "DayTraceTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A56C16082FA9DAE00021CD07 /* Debug */,
+				A56C16092FA9DAE00021CD07 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
