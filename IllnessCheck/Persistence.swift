@@ -42,23 +42,25 @@ enum PersistenceLog {
 // MARK: - Versioned schema (V1)
 
 /// SchemaV1 is the original shape of the data model: free-text symptom names, no
-/// SymptomCategory entity. We keep it declared here so SwiftData can still open
-/// V1 stores and migrate them to V2.
+/// SymptomCategory entity. The actual `@Model` classes live in Models.swift as
+/// nested types (`SchemaV1.DailyEntry`, `SchemaV1.SymptomEntry`) so SwiftData
+/// can distinguish them from V2's classes during migration.
 enum SchemaV1: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(1, 0, 0) }
 
     static var models: [any PersistentModel.Type] {
-        [DailyEntry.self, SymptomEntry.self]
+        [SchemaV1.DailyEntry.self, SchemaV1.SymptomEntry.self]
     }
 }
 
 /// SchemaV2 introduces SymptomCategory and adds a `category` relationship on
 /// SymptomEntry. The legacy `name` stays on SymptomEntry as an audit field.
+/// Nested `@Model` classes live in Models.swift.
 enum SchemaV2: VersionedSchema {
     static var versionIdentifier: Schema.Version { Schema.Version(2, 0, 0) }
 
     static var models: [any PersistentModel.Type] {
-        [DailyEntry.self, SymptomEntry.self, SymptomCategory.self]
+        [SchemaV2.DailyEntry.self, SchemaV2.SymptomEntry.self, SchemaV2.SymptomCategory.self]
     }
 }
 
@@ -76,14 +78,19 @@ enum DayTraceMigrationPlan: SchemaMigrationPlan {
             let logger = Logger(subsystem: "app.daytrace.persistence", category: "migration")
             logger.notice("V1->V2: starting symptom-category migration")
 
+            // The SwiftData store has already been read with the V2 schema by the
+            // time `didMigrate` runs, so we operate on V2 model types here. The
+            // legacy `name` field still carries the pre-migration free-text value
+            // for every row that originated in V1.
+            //
             // 1. Seed built-ins idempotently. Look for an existing slug first;
             //    if not present, create. We never overwrite a user-renamed built-in.
-            let existingCategories = (try? context.fetch(FetchDescriptor<SymptomCategory>())) ?? []
-            var bySlug: [String: SymptomCategory] = Dictionary(uniqueKeysWithValues: existingCategories.map { ($0.slug, $0) })
+            let existingCategories = (try? context.fetch(FetchDescriptor<SchemaV2.SymptomCategory>())) ?? []
+            var bySlug: [String: SchemaV2.SymptomCategory] = Dictionary(uniqueKeysWithValues: existingCategories.map { ($0.slug, $0) })
 
             for (idx, preset) in SymptomPreset.orderedSeed.enumerated() {
                 if bySlug[preset.slug] == nil {
-                    let cat = SymptomCategory(
+                    let cat = SchemaV2.SymptomCategory(
                         slug: preset.slug,
                         displayName: preset.title,
                         symbolName: preset.symbol,
@@ -100,7 +107,7 @@ enum DayTraceMigrationPlan: SchemaMigrationPlan {
             // 2. Walk every SymptomEntry, attach a category. Map by normalized name.
             //    If a normalized name doesn't match a built-in, create a user category
             //    on the fly and reuse it for any further entries with the same name.
-            let allEntries = (try? context.fetch(FetchDescriptor<SymptomEntry>())) ?? []
+            let allEntries = (try? context.fetch(FetchDescriptor<SchemaV2.SymptomEntry>())) ?? []
             var nextSortOrder = SymptomPreset.orderedSeed.count
             var migrated = 0
             var newUserCategories = 0
@@ -114,7 +121,7 @@ enum DayTraceMigrationPlan: SchemaMigrationPlan {
                 } else {
                     let displayName = raw.trimmingCharacters(in: .whitespacesAndNewlines)
                     let safeName = displayName.isEmpty ? "Unbenannt" : displayName
-                    let cat = SymptomCategory(
+                    let cat = SchemaV2.SymptomCategory(
                         slug: slug,
                         displayName: safeName,
                         symbolName: "cross.case.fill",
