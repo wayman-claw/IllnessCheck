@@ -22,6 +22,9 @@
 		A10000010000000000000013 /* SymptomCategoriesSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A10000110000000000000014 /* SymptomCategoriesSettingsView.swift */; };
 		A51810882F72715200FC9D06 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A51810872F72715200FC9D06 /* Assets.xcassets */; };
 		A56C160E2FA9EBDB0021CD07 /* Correlation.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56C160D2FA9EBDB0021CD07 /* Correlation.swift */; };
+		A56C16152FAA29FB0021CD07 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56C16132FAA29FB0021CD07 /* HomeView.swift */; };
+		A56C16162FAA29FB0021CD07 /* MonthCalendarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56C16142FAA29FB0021CD07 /* MonthCalendarView.swift */; };
+		A56C16172FAA29FB0021CD07 /* AnalysisView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A56C16122FAA29FB0021CD07 /* AnalysisView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,6 +56,9 @@
 		A56C16022FA9DAE00021CD07 /* DayTraceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DayTraceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A56C160D2FA9EBDB0021CD07 /* Correlation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Correlation.swift; sourceTree = "<group>"; };
 		A56C160F2FA9EC530021CD07 /* DayTrace.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = DayTrace.xctestplan; path = "../../untitled/tests-devs/DayTrace.xctestplan"; sourceTree = "<group>"; };
+		A56C16122FAA29FB0021CD07 /* AnalysisView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalysisView.swift; sourceTree = "<group>"; };
+		A56C16132FAA29FB0021CD07 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		A56C16142FAA29FB0021CD07 /* MonthCalendarView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MonthCalendarView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -91,6 +97,9 @@
 		A10000310000000000000002 /* IllnessCheck */ = {
 			isa = PBXGroup;
 			children = (
+				A56C16122FAA29FB0021CD07 /* AnalysisView.swift */,
+				A56C16132FAA29FB0021CD07 /* HomeView.swift */,
+				A56C16142FAA29FB0021CD07 /* MonthCalendarView.swift */,
 				A56C160D2FA9EBDB0021CD07 /* Correlation.swift */,
 				A10000110000000000000001 /* IllnessCheckApp.swift */,
 				A10000110000000000000002 /* Models.swift */,
@@ -224,6 +233,9 @@
 				A10000010000000000000001 /* IllnessCheckApp.swift in Sources */,
 				A10000010000000000000002 /* Models.swift in Sources */,
 				A10000010000000000000003 /* ReminderManager.swift in Sources */,
+				A56C16152FAA29FB0021CD07 /* HomeView.swift in Sources */,
+				A56C16162FAA29FB0021CD07 /* MonthCalendarView.swift in Sources */,
+				A56C16172FAA29FB0021CD07 /* AnalysisView.swift in Sources */,
 				A10000010000000000000004 /* RootView.swift in Sources */,
 				A10000010000000000000005 /* EntryEditorView.swift in Sources */,
 				A10000010000000000000006 /* ReminderSettingsView.swift in Sources */,
