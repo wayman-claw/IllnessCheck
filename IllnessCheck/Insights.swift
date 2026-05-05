@@ -33,11 +33,12 @@ struct AppInsights {
     let earnedAchievements: [Achievement]
     let topSymptoms: [SymptomStat]
     let comparisons: [ComparisonInsight]
+    let correlations: [CorrelationInsight]
     let messages: [InsightMessage]
 }
 
 enum InsightsBuilder {
-    static func build(from entries: [DailyEntry]) -> AppInsights {
+    static func build(from entries: [DailyEntry], userSex: UserSex = .undisclosed) -> AppInsights {
         let sorted = entries.sorted { $0.date < $1.date }
         let streak = calculateStreak(from: sorted)
         let mood = sorted.isEmpty ? 0 : Double(sorted.map(\.moodScore).reduce(0, +)) / Double(sorted.count)
@@ -56,6 +57,7 @@ enum InsightsBuilder {
 
         let topSymptoms = buildTopSymptoms(from: sorted)
         let comparisons = buildComparisons(from: sorted)
+        let correlations = CorrelationEngine.insights(entries: sorted, userSex: userSex)
         let messages = buildMessages(from: sorted, topSymptoms: topSymptoms, comparisons: comparisons, mood: mood, symptomFreeDays: symptomFreeDays)
 
         return AppInsights(
@@ -68,6 +70,7 @@ enum InsightsBuilder {
             earnedAchievements: achievements,
             topSymptoms: topSymptoms,
             comparisons: comparisons,
+            correlations: correlations,
             messages: messages
         )
     }

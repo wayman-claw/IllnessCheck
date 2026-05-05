@@ -14,7 +14,9 @@ struct RootView: View {
     @State private var selectedEntryForEditing: DailyEntry?
 
     private var latestEntry: DailyEntry? { entries.first }
-    private var insights: AppInsights { InsightsBuilder.build(from: entries) }
+    private var insights: AppInsights {
+        InsightsBuilder.build(from: entries, userSex: appSettings.userSex)
+    }
 
     var body: some View {
         NavigationStack {
@@ -29,6 +31,7 @@ struct RootView: View {
                     analyticsOverview
                     moodChartSection
                     comparisonSection
+                    correlationSection
                     symptomSection
                     insightsSection
                     achievementsSection
@@ -271,6 +274,22 @@ struct RootView: View {
         .frame(maxWidth: .infinity, alignment: .leading)
     }
 
+    private var correlationSection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Text("Mögliche Zusammenhänge")
+                .font(.headline)
+
+            if insights.correlations.isEmpty {
+                EmptyInsightCard(text: "Sobald genug Tage erfasst sind (mindestens 7 mit und 7 ohne den jeweiligen Auslöser), siehst du hier Auffälligkeiten — z. B. ‚Kopfschmerzen treten an Kaffee-Tagen häufiger auf‘.")
+            } else {
+                ForEach(insights.correlations.prefix(6)) { insight in
+                    CorrelationCard(insight: insight)
+                }
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+
     private var symptomSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Beschwerden")
@@ -429,6 +448,107 @@ private struct ComparisonValueCard: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .padding(12)
         .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct CorrelationCard: View {
+    let insight: CorrelationInsight
+
+    private var directionWord: String {
+        insight.rateDelta >= 0 ? "häufiger" : "seltener"
+    }
+
+    private var triggerTint: Color {
+        switch insight.strength {
+        case .weak: return .gray
+        case .moderate: return .orange
+        case .strong: return insight.rateDelta >= 0 ? .red : .green
+        }
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text(insight.categoryDisplayName)
+                    .font(.subheadline.weight(.semibold))
+                Spacer()
+                StrengthBadge(strength: insight.strength)
+            }
+
+            Text("\(directionWord) bei „\(insight.trigger.presentLabel)“")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+
+            HStack(spacing: 12) {
+                CorrelationValueCard(
+                    label: insight.trigger.presentLabel,
+                    rate: insight.withTriggerRate,
+                    sampleSize: insight.withTriggerTotal,
+                    tint: triggerTint
+                )
+                CorrelationValueCard(
+                    label: insight.trigger.absentLabel,
+                    rate: insight.withoutTriggerRate,
+                    sampleSize: insight.withoutTriggerTotal,
+                    tint: .secondary
+                )
+            }
+        }
+        .padding(16)
+        .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
+    }
+}
+
+private struct CorrelationValueCard: View {
+    let label: String
+    let rate: Double
+    let sampleSize: Int
+    let tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.caption)
+                .foregroundStyle(.secondary)
+            Text("\(Int((rate * 100).rounded()))%")
+                .font(.title3.weight(.bold))
+                .foregroundStyle(tint)
+            Text("\(sampleSize) Tage")
+                .font(.caption2)
+                .foregroundStyle(.tertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(Color(.systemBackground), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+    }
+}
+
+private struct StrengthBadge: View {
+    let strength: CorrelationInsight.Strength
+
+    private var label: String {
+        switch strength {
+        case .weak: return "schwach"
+        case .moderate: return "mittel"
+        case .strong: return "stark"
+        }
+    }
+
+    private var tint: Color {
+        switch strength {
+        case .weak: return .gray
+        case .moderate: return .orange
+        case .strong: return .red
+        }
+    }
+
+    var body: some View {
+        Text(label)
+            .font(.caption2.weight(.semibold))
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(tint.opacity(0.15), in: Capsule())
+            .foregroundStyle(tint)
     }
 }
 
