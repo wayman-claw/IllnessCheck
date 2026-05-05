@@ -52,6 +52,7 @@
 		A51810872F72715200FC9D06 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A56C16022FA9DAE00021CD07 /* DayTraceTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = DayTraceTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		A56C160D2FA9EBDB0021CD07 /* Correlation.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Correlation.swift; sourceTree = "<group>"; };
+		A56C160F2FA9EC530021CD07 /* DayTrace.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; name = DayTrace.xctestplan; path = "../../untitled/tests-devs/DayTrace.xctestplan"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -79,6 +80,7 @@
 		A10000310000000000000001 = {
 			isa = PBXGroup;
 			children = (
+				A56C160F2FA9EC530021CD07 /* DayTrace.xctestplan */,
 				A51810872F72715200FC9D06 /* Assets.xcassets */,
 				A10000310000000000000002 /* IllnessCheck */,
 				A10000310000000000000003,
