@@ -24,8 +24,13 @@ struct ExportDailyEntry: Codable {
 }
 
 struct ExportSymptom: Codable {
-    let name: String
+    /// Stable analytics key (category slug, or normalized legacy name).
+    let categorySlug: String
+    /// Human-readable display name at the time of export.
+    let categoryName: String
+    /// Severity raw value.
     let severity: String
+    /// Optional note attached to this individual symptom on this day.
     let note: String
 }
 
@@ -50,7 +55,12 @@ enum ExportFactory {
                     cycleDay: $0.cycleDay,
                     cycleNote: $0.cycleNote,
                     symptoms: $0.symptoms.map {
-                        ExportSymptom(name: $0.name, severity: $0.severity.rawValue, note: $0.note)
+                        ExportSymptom(
+                            categorySlug: $0.analyticsKey,
+                            categoryName: $0.displayName,
+                            severity: $0.severity.rawValue,
+                            note: $0.note
+                        )
                     }
                 )
             }

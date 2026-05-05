@@ -23,6 +23,14 @@ struct ProfileSettingsView: View {
                 }
             }
 
+            Section("Beschwerden") {
+                NavigationLink {
+                    SymptomCategoriesSettingsView()
+                } label: {
+                    Label("Symptom-Kategorien", systemImage: "list.bullet.rectangle")
+                }
+            }
+
             Section("Hinweis") {
                 Text("Die optionale Zyklus-Sektion wird nur eingeblendet, wenn das Profil auf weiblich steht und Zyklus-Tracking aktiviert wurde.")
                     .font(.footnote)

@@ -99,18 +99,17 @@ struct EntryEditorView: View {
                     }
 
                     EditorSection(title: "Beschwerden") {
-                        SymptomPresetScroller { preset in
-                            symptoms.append(.init(name: preset == .custom ? "" : preset.title))
-                        }
+                        SymptomCategoryGrid(
+                            selectedSymptoms: $symptoms
+                        )
 
-                        if symptoms.isEmpty {
-                            Text("Keine Beschwerden hinzugefügt")
-                                .foregroundStyle(.secondary)
-                        }
-
-                        ForEach($symptoms) { $symptom in
-                            SymptomEditorCard(symptom: $symptom) {
-                                symptoms.removeAll { $0.id == symptom.id }
+                        if !symptoms.isEmpty {
+                            VStack(spacing: 10) {
+                                ForEach($symptoms) { $symptom in
+                                    SymptomSeverityRow(symptom: $symptom) {
+                                        symptoms.removeAll { $0.id == symptom.id }
+                                    }
+                                }
                             }
                         }
                     }
@@ -157,7 +156,7 @@ struct EntryEditorView: View {
         cyclePhase = entry.cyclePhase
         cycleDayText = entry.cycleDay.map(String.init) ?? ""
         cycleNote = entry.cycleNote
-        symptoms = entry.symptoms.map { EditableSymptom(name: $0.name, severity: $0.severity, note: $0.note) }
+        symptoms = entry.symptoms.compactMap(EditableSymptom.init(from:))
     }
 
     private func save() {
@@ -209,14 +208,18 @@ struct EntryEditorView: View {
     private func replaceSymptoms(on target: DailyEntry) {
         target.symptoms.removeAll()
 
-        let cleanedSymptoms = symptoms.compactMap { symptom -> SymptomEntry? in
-            let cleanedName = symptom.name.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard !cleanedName.isEmpty else { return nil }
-            return SymptomEntry(name: cleanedName, severity: symptom.severity, note: symptom.note.trimmingCharacters(in: .whitespacesAndNewlines))
+        let newEntries: [SymptomEntry] = symptoms.compactMap { editable in
+            guard let category = editable.category else { return nil }
+            return SymptomEntry(
+                name: category.displayName,
+                severity: editable.severity,
+                note: editable.note.trimmingCharacters(in: .whitespacesAndNewlines),
+                category: category
+            )
         }
 
-        for symptom in cleanedSymptoms {
-            target.symptoms.append(symptom)
+        for entry in newEntries {
+            target.symptoms.append(entry)
         }
     }
 
@@ -235,15 +238,38 @@ struct EntryEditorView: View {
         cyclePhase = existing.cyclePhase
         cycleDayText = existing.cycleDay.map(String.init) ?? ""
         cycleNote = existing.cycleNote
-        symptoms = existing.symptoms.map { EditableSymptom(name: $0.name, severity: $0.severity, note: $0.note) }
+        symptoms = existing.symptoms.compactMap(EditableSymptom.init(from:))
     }
 }
 
 struct EditableSymptom: Identifiable, Equatable {
     let id = UUID()
-    var name: String = ""
+    var category: SymptomCategory?
     var severity: SeverityLevel = .medium
     var note: String = ""
+
+    init(category: SymptomCategory? = nil, severity: SeverityLevel = .medium, note: String = "") {
+        self.category = category
+        self.severity = severity
+        self.note = note
+    }
+
+    /// Build from an existing persisted SymptomEntry. Skips entries without a
+    /// category (defensive: shouldn't happen post-V2-migration, but if it does,
+    /// dropping the row in the editor is safer than presenting an unselectable item).
+    init?(from persisted: SymptomEntry) {
+        guard let category = persisted.category else { return nil }
+        self.category = category
+        self.severity = persisted.severity
+        self.note = persisted.note
+    }
+
+    static func == (lhs: EditableSymptom, rhs: EditableSymptom) -> Bool {
+        lhs.id == rhs.id
+            && lhs.severity == rhs.severity
+            && lhs.note == rhs.note
+            && lhs.category?.persistentModelID == rhs.category?.persistentModelID
+    }
 }
 
 private struct EditorHeroCard: View {
@@ -387,18 +413,112 @@ private struct ToggleChip: View {
     }
 }
 
-private struct SymptomEditorCard: View {
+// MARK: - Symptom selection (V2: tap-only, no free text)
+
+/// Tap-to-toggle grid of all active symptom categories. No free-text input.
+/// Selecting a category appends a default-severity EditableSymptom; tapping
+/// again removes it.
+private struct SymptomCategoryGrid: View {
+    @Binding var selectedSymptoms: [EditableSymptom]
+    @Query(
+        filter: #Predicate<SymptomCategory> { !$0.isArchived },
+        sort: [SortDescriptor(\SymptomCategory.sortOrder), SortDescriptor(\SymptomCategory.displayName)]
+    )
+    private var categories: [SymptomCategory]
+
+    private let columns = [
+        GridItem(.adaptive(minimum: 110, maximum: 160), spacing: 8)
+    ]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            if categories.isEmpty {
+                Text("Keine Kategorien verfügbar. Lege über Einstellungen → Symptom-Kategorien neue an.")
+                    .font(.footnote)
+                    .foregroundStyle(.secondary)
+            } else {
+                LazyVGrid(columns: columns, spacing: 8) {
+                    ForEach(categories) { category in
+                        SymptomCategoryChip(
+                            category: category,
+                            isSelected: isSelected(category)
+                        ) {
+                            toggle(category)
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private func isSelected(_ category: SymptomCategory) -> Bool {
+        selectedSymptoms.contains { $0.category?.persistentModelID == category.persistentModelID }
+    }
+
+    private func toggle(_ category: SymptomCategory) {
+        if let idx = selectedSymptoms.firstIndex(where: { $0.category?.persistentModelID == category.persistentModelID }) {
+            selectedSymptoms.remove(at: idx)
+        } else {
+            selectedSymptoms.append(EditableSymptom(category: category))
+        }
+    }
+}
+
+private struct SymptomCategoryChip: View {
+    let category: SymptomCategory
+    let isSelected: Bool
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 8) {
+                Image(systemName: category.symbolName)
+                    .font(.subheadline.weight(.medium))
+                Text(category.displayName)
+                    .font(.subheadline.weight(.medium))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+            .padding(.horizontal, 12)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(isSelected ? Color.accentColor.opacity(0.18) : Color(.secondarySystemBackground))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .strokeBorder(isSelected ? Color.accentColor : Color.clear, lineWidth: 1.5)
+            )
+            .foregroundStyle(isSelected ? Color.accentColor : Color.primary)
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+    }
+}
+
+/// Severity + optional note for a single selected symptom. Shown only after the
+/// user has tapped a category chip.
+private struct SymptomSeverityRow: View {
     @Binding var symptom: EditableSymptom
     let onDelete: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                TextField("Beschwerde", text: $symptom.name)
-                    .textFieldStyle(.roundedBorder)
-                Button(role: .destructive, action: onDelete) {
-                    Image(systemName: "trash")
+            HStack(spacing: 8) {
+                if let category = symptom.category {
+                    Image(systemName: category.symbolName)
+                        .foregroundStyle(.secondary)
+                    Text(category.displayName)
+                        .font(.subheadline.weight(.semibold))
                 }
+                Spacer()
+                Button(role: .destructive, action: onDelete) {
+                    Image(systemName: "xmark.circle.fill")
+                        .foregroundStyle(.secondary)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel("Entfernen")
             }
 
             Picker("Stärke", selection: $symptom.severity) {
@@ -438,25 +558,4 @@ extension IntakeLevel: TitledOption {}
 extension OptionalIntakeLevel: TitledOption {}
 extension CyclePhase: TitledOption {}
 
-private struct SymptomPresetScroller: View {
-    let onSelect: (SymptomPreset) -> Void
 
-    var body: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach(SymptomPreset.allCases) { preset in
-                    Button {
-                        onSelect(preset)
-                    } label: {
-                        HStack(spacing: 8) {
-                            Image(systemName: preset.symbol)
-                            Text(preset.title)
-                        }
-                    }
-                    .buttonStyle(.bordered)
-                }
-            }
-            .padding(.vertical, 2)
-        }
-    }
-}
