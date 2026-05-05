@@ -52,12 +52,18 @@ enum InsightsBuilder {
         if !entries.isEmpty { achievements.append(.firstEntry) }
         if streak >= 3 { achievements.append(.streak3) }
         if streak >= 7 { achievements.append(.streak7) }
+        if streak >= 14 { achievements.append(.streak14) }
+        if streak >= 30 { achievements.append(.streak30) }
         if entries.filter({ $0.waterLevel == .much || $0.waterLevel == .medium }).count >= 5 { achievements.append(.hydrationWin) }
         if entries.filter({ !$0.generalNote.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }).count >= 5 { achievements.append(.reflectionPro) }
+        if hasPerfectWeek(in: sorted) { achievements.append(.perfectWeek) }
+        if hasSymptomFree7(in: sorted) { achievements.append(.symptomFree7) }
+        if hasMonthExplorer(in: sorted) { achievements.append(.monthExplorer) }
 
         let topSymptoms = buildTopSymptoms(from: sorted)
         let comparisons = buildComparisons(from: sorted)
         let correlations = CorrelationEngine.insights(entries: sorted, userSex: userSex)
+        if !correlations.isEmpty { achievements.append(.firstCorrelation) }
         let messages = buildMessages(from: sorted, topSymptoms: topSymptoms, comparisons: comparisons, mood: mood, symptomFreeDays: symptomFreeDays)
 
         return AppInsights(
@@ -73,6 +79,95 @@ enum InsightsBuilder {
             correlations: correlations,
             messages: messages
         )
+    }
+
+    /// 7 consecutive days where moodScore >= 4. We just need ANY such window
+    /// in the user's history; we walk all sorted entries and check 7-day windows.
+    private static func hasPerfectWeek(in sortedEntries: [DailyEntry]) -> Bool {
+        guard sortedEntries.count >= 7 else { return false }
+        let calendar = Calendar.current
+        // Group by day to dedupe; keep highest mood for that day.
+        var moodByDay: [Date: Int] = [:]
+        for entry in sortedEntries {
+            let day = calendar.startOfDay(for: entry.date)
+            moodByDay[day] = max(moodByDay[day] ?? 0, entry.moodScore)
+        }
+        let sortedDays = moodByDay.keys.sorted()
+        var streak = 0
+        var previous: Date?
+        for day in sortedDays {
+            if let prev = previous,
+               let next = calendar.date(byAdding: .day, value: 1, to: prev),
+               !calendar.isDate(day, inSameDayAs: next) {
+                streak = 0
+            }
+            if (moodByDay[day] ?? 0) >= 4 {
+                streak += 1
+                if streak >= 7 { return true }
+            } else {
+                streak = 0
+            }
+            previous = day
+        }
+        return false
+    }
+
+    /// 7 consecutive days without any logged symptoms.
+    private static func hasSymptomFree7(in sortedEntries: [DailyEntry]) -> Bool {
+        guard sortedEntries.count >= 7 else { return false }
+        let calendar = Calendar.current
+        var symptomFreeByDay: [Date: Bool] = [:]
+        for entry in sortedEntries {
+            let day = calendar.startOfDay(for: entry.date)
+            // If ANY entry that day has symptoms, mark the day as not symptom-free.
+            if entry.symptoms.isEmpty {
+                if symptomFreeByDay[day] == nil { symptomFreeByDay[day] = true }
+            } else {
+                symptomFreeByDay[day] = false
+            }
+        }
+        let sortedDays = symptomFreeByDay.keys.sorted()
+        var streak = 0
+        var previous: Date?
+        for day in sortedDays {
+            if let prev = previous,
+               let next = calendar.date(byAdding: .day, value: 1, to: prev),
+               !calendar.isDate(day, inSameDayAs: next) {
+                streak = 0
+            }
+            if symptomFreeByDay[day] == true {
+                streak += 1
+                if streak >= 7 { return true }
+            } else {
+                streak = 0
+            }
+            previous = day
+        }
+        return false
+    }
+
+    /// All days of any single calendar month covered by entries.
+    private static func hasMonthExplorer(in sortedEntries: [DailyEntry]) -> Bool {
+        guard !sortedEntries.isEmpty else { return false }
+        let calendar = Calendar.current
+        var daysByMonth: [String: Set<Int>] = [:]
+        for entry in sortedEntries {
+            let comps = calendar.dateComponents([.year, .month, .day], from: entry.date)
+            guard let year = comps.year, let month = comps.month, let day = comps.day else { continue }
+            let key = "\(year)-\(month)"
+            daysByMonth[key, default: []].insert(day)
+        }
+        for (key, days) in daysByMonth {
+            let parts = key.split(separator: "-")
+            guard parts.count == 2,
+                  let year = Int(parts[0]),
+                  let month = Int(parts[1]),
+                  let monthDate = calendar.date(from: DateComponents(year: year, month: month)),
+                  let range = calendar.range(of: .day, in: .month, for: monthDate)
+            else { continue }
+            if days.count >= range.count { return true }
+        }
+        return false
     }
 
     private static func buildTopSymptoms(from entries: [DailyEntry]) -> [SymptomStat] {

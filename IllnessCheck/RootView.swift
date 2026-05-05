@@ -24,74 +24,18 @@ struct RootView: View {
                 VStack(spacing: 20) {
                     storeRecoveryBanner
 
-                    HeroCardView(latestEntry: latestEntry, appName: "DayTrace") {
-                        openTodayCheckIn()
-                    }
-
-                    analyticsOverview
-                    moodChartSection
-                    comparisonSection
-                    correlationSection
-                    symptomSection
-                    insightsSection
-                    achievementsSection
-
-                    if entries.isEmpty {
-                        ContentUnavailableView(
-                            "Noch keine Einträge",
-                            systemImage: "heart.text.square",
-                            description: Text("Starte mit deinem ersten Tages-Check-in und beobachte Muster über die Zeit.")
-                        )
-                        .frame(maxWidth: .infinity)
-                        .padding(.top, 40)
-                    } else {
-                        VStack(alignment: .leading, spacing: 14) {
-                            HStack {
-                                Text("Letzte Tage")
-                                    .font(.title3.weight(.semibold))
-                                Spacer()
-                                Button("Export") {
-                                    exportJSON = ExportFactory.makeJSON(from: entries)
-                                    showingExport = true
-                                }
-                                .buttonStyle(.bordered)
-                            }
-                            .frame(maxWidth: .infinity, alignment: .leading)
-
-                            ForEach(entries) { entry in
-                                NavigationLink {
-                                    DayDetailView(entry: entry) {
-                                        selectedEntryForEditing = entry
-                                    }
-                                } label: {
-                                    DayRowCard(entry: entry)
-                                }
-                                .buttonStyle(.plain)
-                                .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                                    Button("Bearbeiten") {
-                                        selectedEntryForEditing = entry
-                                    }
-                                    .tint(.blue)
-
-                                    Button("Löschen", role: .destructive) {
-                                        delete(entry)
-                                    }
-                                }
-                                .contextMenu {
-                                    Button {
-                                        selectedEntryForEditing = entry
-                                    } label: {
-                                        Label("Bearbeiten", systemImage: "pencil")
-                                    }
-                                    Button(role: .destructive) {
-                                        delete(entry)
-                                    } label: {
-                                        Label("Löschen", systemImage: "trash")
-                                    }
-                                }
-                            }
+                    HomeView(
+                        entries: entries,
+                        insights: insights,
+                        onStartTodayCheckIn: openTodayCheckIn,
+                        onSelectDay: openCheckIn(for:),
+                        onEditEntry: { entry in selectedEntryForEditing = entry },
+                        onDeleteEntry: delete(_:),
+                        onExport: {
+                            exportJSON = ExportFactory.makeJSON(from: entries)
+                            showingExport = true
                         }
-                    }
+                    )
                 }
                 .padding(20)
             }
@@ -112,7 +56,13 @@ struct RootView: View {
                     }
                 }
 
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    NavigationLink {
+                        AnalysisView()
+                    } label: {
+                        Image(systemName: "chart.bar.xaxis")
+                    }
+
                     Button {
                         openTodayCheckIn()
                     } label: {
@@ -209,144 +159,7 @@ struct RootView: View {
         }
     }
 
-    private var analyticsOverview: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Überblick")
-                .font(.headline)
-
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
-                MiniStat(title: "Einträge", value: "\(entries.count)")
-                MiniStat(title: "Streak", value: "\(insights.streakDays) Tage")
-                MiniStat(title: "Mood Ø", value: entries.isEmpty ? "–" : String(format: "%.1f/5", insights.averageMood))
-                MiniStat(title: "Gute Tage", value: entries.isEmpty ? "–" : "\(Int((insights.goodDayShare * 100).rounded()))%")
-                MiniStat(title: "Symptomfrei", value: "\(insights.symptomFreeDays)")
-                MiniStat(title: "Beschwerden/Tag", value: entries.isEmpty ? "–" : String(format: "%.1f", insights.averageSymptomsPerDay))
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var moodChartSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Wohlbefinden & Hydration")
-                .font(.headline)
-
-            Chart(recentEntries) { entry in
-                LineMark(
-                    x: .value("Tag", entry.date),
-                    y: .value("Tagesgefühl", entry.moodScore)
-                )
-                .foregroundStyle(.pink)
-                .lineStyle(StrokeStyle(lineWidth: 3))
-
-                AreaMark(
-                    x: .value("Tag", entry.date),
-                    y: .value("Tagesgefühl", entry.moodScore)
-                )
-                .foregroundStyle(.pink.opacity(0.12))
-
-                BarMark(
-                    x: .value("Tag", entry.date),
-                    y: .value("Hydration", entry.overallHydration.fillFraction * 5)
-                )
-                .foregroundStyle(.blue.opacity(0.25))
-            }
-            .frame(height: 240)
-            .padding(12)
-            .background(Color(.secondarySystemBackground), in: RoundedRectangle(cornerRadius: 20, style: .continuous))
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var comparisonSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Einflussfaktoren")
-                .font(.headline)
-
-            if insights.comparisons.isEmpty {
-                EmptyInsightCard(text: "Sobald genug Daten vorliegen, siehst du hier Vergleiche wie Kaffee vs. kein Kaffee oder viel Wasser vs. wenig Wasser.")
-            } else {
-                ForEach(insights.comparisons) { comparison in
-                    ComparisonCard(comparison: comparison)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var correlationSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Mögliche Zusammenhänge")
-                .font(.headline)
-
-            if insights.correlations.isEmpty {
-                EmptyInsightCard(text: "Sobald genug Tage erfasst sind (mindestens 7 mit und 7 ohne den jeweiligen Auslöser), siehst du hier Auffälligkeiten — z. B. ‚Kopfschmerzen treten an Kaffee-Tagen häufiger auf‘.")
-            } else {
-                ForEach(insights.correlations.prefix(6)) { insight in
-                    CorrelationCard(insight: insight)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var symptomSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Beschwerden")
-                .font(.headline)
-
-            if insights.topSymptoms.isEmpty {
-                EmptyInsightCard(text: "Noch keine Beschwerden erfasst. Sobald Symptome eingetragen werden, erscheinen hier Häufigkeit und Stärke.")
-            } else {
-                ForEach(insights.topSymptoms) { symptom in
-                    SymptomStatCard(stat: symptom)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var insightsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Insights")
-                .font(.headline)
-
-            if insights.messages.isEmpty {
-                EmptyInsightCard(text: "Sobald genug Daten gesammelt wurden, erscheinen hier automatisch formulierte Beobachtungen.")
-            } else {
-                ForEach(insights.messages) { message in
-                    InsightMessageCard(message: message)
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var achievementsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Motivation")
-                .font(.headline)
-
-            ScrollView(.horizontal, showsIndicators: false) {
-                HStack(spacing: 12) {
-                    ForEach(insights.earnedAchievements) { achievement in
-                        AchievementCard(achievement: achievement)
-                    }
-
-                    if insights.earnedAchievements.isEmpty {
-                        AchievementPlaceholderCard()
-                    }
-                }
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-
-    private var recentEntries: [DailyEntry] {
-        Array(entries.sorted { $0.date < $1.date }.suffix(14))
-    }
-
-    private func delete(_ entry: DailyEntry) {
+    fileprivate func delete(_ entry: DailyEntry) {
         modelContext.delete(entry)
     }
 
@@ -354,9 +167,25 @@ struct RootView: View {
         selectedEntryForEditing = nil
         showingNewEntry = true
     }
+
+    /// Open the editor for an arbitrary date. If an entry exists for that day,
+    /// edit it; otherwise create a new one anchored to that date.
+    fileprivate func openCheckIn(for date: Date) {
+        let calendar = Calendar.current
+        // Don't allow logging future days.
+        if calendar.startOfDay(for: date) > calendar.startOfDay(for: .now) { return }
+
+        if let existing = entry(for: date) {
+            selectedEntryForEditing = existing
+        } else {
+            let newEntry = DailyEntry(date: date)
+            modelContext.insert(newEntry)
+            selectedEntryForEditing = newEntry
+        }
+    }
 }
 
-private struct HeroCardView: View {
+struct HeroCardView: View {
     let latestEntry: DailyEntry?
     let appName: String
     let onCreate: () -> Void
@@ -395,7 +224,7 @@ private struct HeroCardView: View {
     }
 }
 
-private struct MiniStat: View {
+struct MiniStat: View {
     let title: String
     let value: String
 
@@ -413,7 +242,7 @@ private struct MiniStat: View {
     }
 }
 
-private struct ComparisonCard: View {
+struct ComparisonCard: View {
     let comparison: ComparisonInsight
 
     var body: some View {
@@ -431,7 +260,7 @@ private struct ComparisonCard: View {
     }
 }
 
-private struct ComparisonValueCard: View {
+struct ComparisonValueCard: View {
     let label: String
     let value: Double
     let tint: Color
@@ -451,7 +280,7 @@ private struct ComparisonValueCard: View {
     }
 }
 
-private struct CorrelationCard: View {
+struct CorrelationCard: View {
     let insight: CorrelationInsight
 
     private var directionWord: String {
@@ -499,7 +328,7 @@ private struct CorrelationCard: View {
     }
 }
 
-private struct CorrelationValueCard: View {
+struct CorrelationValueCard: View {
     let label: String
     let rate: Double
     let sampleSize: Int
@@ -523,7 +352,7 @@ private struct CorrelationValueCard: View {
     }
 }
 
-private struct StrengthBadge: View {
+struct StrengthBadge: View {
     let strength: CorrelationInsight.Strength
 
     private var label: String {
@@ -552,7 +381,7 @@ private struct StrengthBadge: View {
     }
 }
 
-private struct SymptomStatCard: View {
+struct SymptomStatCard: View {
     let stat: SymptomStat
 
     var body: some View {
@@ -582,7 +411,7 @@ private struct SymptomStatCard: View {
     }
 }
 
-private struct InsightMessageCard: View {
+struct InsightMessageCard: View {
     let message: InsightMessage
 
     var body: some View {
@@ -598,7 +427,7 @@ private struct InsightMessageCard: View {
     }
 }
 
-private struct EmptyInsightCard: View {
+struct EmptyInsightCard: View {
     let text: String
 
     var body: some View {
@@ -611,7 +440,7 @@ private struct EmptyInsightCard: View {
     }
 }
 
-private struct DayRowCard: View {
+struct DayRowCard: View {
     let entry: DailyEntry
 
     var body: some View {
@@ -655,7 +484,7 @@ private struct DayRowCard: View {
     }
 }
 
-private struct SummaryBadge: View {
+struct SummaryBadge: View {
     let title: String
     let value: String
 
@@ -673,7 +502,7 @@ private struct SummaryBadge: View {
     }
 }
 
-private struct SymptomBadge: View {
+struct SymptomBadge: View {
     let symptom: SymptomEntry
 
     var body: some View {
@@ -694,7 +523,7 @@ private struct SymptomBadge: View {
     }
 }
 
-private struct DayDetailView: View {
+struct DayDetailView: View {
     @EnvironmentObject private var appSettings: AppSettings
     let entry: DailyEntry
     let onEdit: () -> Void
@@ -837,7 +666,7 @@ private struct DetailRow: View {
     }
 }
 
-private struct AchievementCard: View {
+struct AchievementCard: View {
     let achievement: Achievement
 
     var body: some View {
@@ -854,7 +683,7 @@ private struct AchievementCard: View {
     }
 }
 
-private struct AchievementPlaceholderCard: View {
+struct AchievementPlaceholderCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             Image(systemName: "target")
