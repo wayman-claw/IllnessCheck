@@ -138,7 +138,8 @@ struct MonthCalendarView: View {
                         date: day,
                         isInDisplayedMonth: calendar.isDate(day, equalTo: displayedMonth, toGranularity: .month),
                         isToday: calendar.isDateInToday(day),
-                        state: entryByDay[day].map(CalendarDayState.init(entry:)) ?? .empty
+                        state: entryByDay[day].map(CalendarDayState.init(entry:)) ?? .empty,
+                        symptomMarkers: SymptomMarker.makeMarkers(for: entryByDay[day])
                     )
                     .onTapGesture { onSelectDay(day) }
                 }
@@ -211,13 +212,50 @@ struct MonthCalendarView: View {
     // MARK: Legend
 
     private var legend: some View {
-        HStack(spacing: 14) {
-            LegendDot(state: .logged, label: "Erfasst")
-            LegendDot(state: .good, label: "Guter Tag")
-            LegendDot(state: .perfect, label: "Top-Tag")
-            Spacer()
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(spacing: 14) {
+                LegendDot(state: .logged, label: "Erfasst")
+                LegendDot(state: .good, label: "Guter Tag")
+                LegendDot(state: .perfect, label: "Top-Tag")
+                Spacer()
+            }
+
+            // Show a compact symptom legend if any symptoms are present
+            // in the currently displayed entries — otherwise stay quiet.
+            if !visibleSymptomMarkers.isEmpty {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(visibleSymptomMarkers) { marker in
+                            HStack(spacing: 4) {
+                                SymptomMarkerDot(marker: marker)
+                                Text(marker.displayName)
+                                    .font(.caption2)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+            }
         }
         .padding(.top, 4)
+    }
+
+    /// Distinct symptom markers across the entries currently shown in the grid,
+    /// so the legend reflects what the user actually sees this month.
+    private var visibleSymptomMarkers: [SymptomMarker] {
+        var seen = Set<String>()
+        var result: [SymptomMarker] = []
+        let visibleEntries = entries.filter { entry in
+            calendar.isDate(entry.date, equalTo: displayedMonth, toGranularity: .month)
+        }
+        for entry in visibleEntries {
+            for marker in SymptomMarker.makeMarkers(for: entry) {
+                if seen.contains(marker.id) { continue }
+                seen.insert(marker.id)
+                result.append(marker)
+            }
+        }
+        return result
     }
 }
 
@@ -228,11 +266,23 @@ private struct CalendarDayCell: View {
     let isInDisplayedMonth: Bool
     let isToday: Bool
     let state: CalendarDayState
+    let symptomMarkers: [SymptomMarker]
+
+    /// Maximum number of symptom dots we render before collapsing the rest into a +N pill.
+    private static let maxVisibleMarkers = 3
 
     private var dayNumber: String {
         let f = DateFormatter()
         f.dateFormat = "d"
         return f.string(from: date)
+    }
+
+    private var visibleMarkers: [SymptomMarker] {
+        Array(symptomMarkers.prefix(Self.maxVisibleMarkers))
+    }
+
+    private var hiddenMarkerCount: Int {
+        max(0, symptomMarkers.count - Self.maxVisibleMarkers)
     }
 
     var body: some View {
@@ -245,7 +295,7 @@ private struct CalendarDayCell: View {
                         .stroke(borderColor, lineWidth: isToday ? 1.6 : 0)
                 )
 
-            VStack(spacing: 4) {
+            VStack(spacing: 3) {
                 Text(dayNumber)
                     .font(.caption.weight(isToday ? .bold : .medium))
                     .foregroundStyle(numberColor)
@@ -258,6 +308,23 @@ private struct CalendarDayCell: View {
                 } else {
                     // Reserve space so cells with/without symbol have same height.
                     Color.clear.frame(height: 12)
+                }
+
+                // Symptom marker row
+                if symptomMarkers.isEmpty {
+                    Color.clear.frame(height: 8)
+                } else {
+                    HStack(spacing: 2) {
+                        ForEach(visibleMarkers) { marker in
+                            SymptomMarkerDot(marker: marker)
+                        }
+                        if hiddenMarkerCount > 0 {
+                            Text("+\(hiddenMarkerCount)")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    .frame(height: 8)
                 }
             }
             .padding(.vertical, 4)
@@ -284,12 +351,91 @@ private struct CalendarDayCell: View {
 
     private var accessibilityLabel: String {
         let dateText = date.formatted(date: .complete, time: .omitted)
+        let stateDescription: String
         switch state {
-        case .empty: return "\(dateText), keine Eintragung"
-        case .logged: return "\(dateText), erfasst"
-        case .good: return "\(dateText), guter Tag"
-        case .perfect: return "\(dateText), Top-Tag"
+        case .empty: stateDescription = "keine Eintragung"
+        case .logged: stateDescription = "erfasst"
+        case .good: stateDescription = "guter Tag"
+        case .perfect: stateDescription = "Top-Tag"
         }
+        if symptomMarkers.isEmpty {
+            return "\(dateText), \(stateDescription)"
+        }
+        let symptomList = symptomMarkers.map(\.displayName).joined(separator: ", ")
+        return "\(dateText), \(stateDescription), Symptome: \(symptomList)"
+    }
+}
+
+// MARK: - Symptom markers
+
+/// One symptom indicator rendered inside a calendar cell. We dedupe by slug
+/// (each category counts once per day even if logged multiple times) and keep
+/// a stable visual identity (color + symbol) that is consistent across days.
+struct SymptomMarker: Identifiable, Equatable {
+    /// We use the slug as id so the same symptom on different days keeps the
+    /// same SwiftUI identity, which makes for nicer diffing/animations.
+    let id: String        // == slug
+    let symbolName: String
+    let displayName: String
+    let tint: Color
+
+    /// Build markers from a DailyEntry, deduped by slug, ordered by
+    /// the entry's symptom order (so it's stable across renders).
+    static func makeMarkers(for entry: DailyEntry?) -> [SymptomMarker] {
+        guard let entry, !entry.symptoms.isEmpty else { return [] }
+        var seen = Set<String>()
+        var result: [SymptomMarker] = []
+        for symptom in entry.symptoms {
+            let slug = symptom.analyticsKey
+            if seen.contains(slug) { continue }
+            seen.insert(slug)
+            result.append(SymptomMarker(
+                id: slug,
+                symbolName: symptom.category?.symbolName ?? "cross.case.fill",
+                displayName: symptom.displayName,
+                tint: SymptomMarker.tint(forSlug: slug)
+            ))
+        }
+        return result
+    }
+
+    /// Deterministic, stable color per slug. Built-in slugs get curated colors;
+    /// everything else falls back to a hash-based pick from the same palette so
+    /// user-added categories stay visually distinct from each other.
+    static func tint(forSlug slug: String) -> Color {
+        if let curated = curatedTint[slug] { return curated }
+        let palette: [Color] = [.red, .orange, .yellow, .green, .mint, .teal, .blue, .indigo, .purple, .pink, .brown]
+        // Stable hash: sum of unicode scalars mod palette count. Avoids
+        // String.hashValue which is randomized per process launch.
+        let h = slug.unicodeScalars.reduce(0) { $0 &+ Int($1.value) }
+        return palette[abs(h) % palette.count]
+    }
+
+    /// Curated colors for the built-in symptom presets so they always look
+    /// the same and feel intuitive (e.g. red for headache).
+    private static let curatedTint: [String: Color] = [
+        "kopfschmerzen": .red,
+        "bauchschmerzen": .orange,
+        "ubelkeit": .green,
+        "mudigkeit": .indigo,
+        "halsschmerzen": .pink,
+        "ruckenschmerzen": .brown
+    ]
+}
+
+private struct SymptomMarkerDot: View {
+    let marker: SymptomMarker
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(marker.tint.opacity(0.22))
+            Image(systemName: marker.symbolName)
+                .font(.system(size: 5, weight: .bold))
+                .foregroundStyle(marker.tint)
+        }
+        .frame(width: 9, height: 9)
+        .accessibilityHidden(true) // already covered by the cell's accessibilityLabel
     }
 }
 
